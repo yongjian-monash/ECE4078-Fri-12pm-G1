@@ -7,6 +7,9 @@ import cv2
 import os, sys
 import time
 
+# custom
+import threading
+
 # import utility functions
 sys.path.insert(0, "{}/utility".format(os.getcwd()))
 from util.pibot import Alphabot # access the robot
@@ -68,6 +71,9 @@ class Operate:
         self.img = np.zeros([240,320,3], dtype=np.uint8)
         self.aruco_img = np.zeros([240,320,3], dtype=np.uint8)
         self.bg = pygame.image.load('pics/gui_mask.jpg')
+        # custom
+        self.actual_time = 0
+        
 
     # wheel control
     def control(self):       
@@ -78,7 +84,7 @@ class Operate:
                 self.command['motion'])
         if not self.data is None:
             self.data.write_keyboard(lv, rv)
-        dt = time.time() - self.control_clock
+        dt = time.time() - self.control_clock # value is around 0.1 to 0.2
         drive_meas = measure.Drive(lv, rv, dt)
         self.control_clock = time.time()
         return drive_meas
@@ -187,6 +193,12 @@ class Operate:
         caption_surface = TITLE_FONT.render(caption,
                                           False, text_colour)
         canvas.blit(caption_surface, (position[0], position[1]-25))
+        
+    # custom method
+    def stop(self):
+        self.command['motion'] = [0, 0]
+        self.actual_time = time.time() - self.actual_time
+        print(self.actual_time)
 
     # keyboard teleoperation        
     def update_keyboard(self):
@@ -194,16 +206,16 @@ class Operate:
             ########### replace with your M1 codes ###########
             # drive forward
             if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                self.command['motion'] = [2, 0] # TODO: replace with your code to make the robot drive forward
+                self.command['motion'] = [1.5, 0] # TODO: replace with your code to make the robot drive forward
             # drive backward
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                self.command['motion'] = [-2, 0] # TODO: replace with your code to make the robot drive backward
+                self.command['motion'] = [-1.5, 0] # TODO: replace with your code to make the robot drive backward
             # turn left
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                self.command['motion'] = [0, 2] # TODO: replace with your code to make the robot turn left
+                self.command['motion'] = [0, 1.5] # TODO: replace with your code to make the robot turn left
             # drive right
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                self.command['motion'] = [0, -2] # TODO: replace with your code to make the robot turn right
+                self.command['motion'] = [0, -1.5] # TODO: replace with your code to make the robot turn right
             ####################################################
             # stop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -247,6 +259,28 @@ class Operate:
                 self.quit = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
+            ########### Custom controls ###########
+            # # drive forward by 0.4m
+            # if event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                # self.command['motion'] = [2, 0]
+                # self.actual_time = time.time()
+                # threading.Timer(1.25, self.stop).start()
+            # # drive backward by 0.4m
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                # self.command['motion'] = [-2, 0]
+                # self.actual_time = time.time()
+                # threading.Timer(1.25, self.stop).start()
+            # # turn left by 45 deg
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                # self.command['motion'] = [0, 2]
+                # self.actual_time = time.time()
+                # threading.Timer(24, self.stop).start() # 8 turns
+            # # turn right by 45 deg
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                # self.command['motion'] = [0, -2]
+                # self.actual_time = time.time()
+                # threading.Timer(24, self.stop).start() # 8 turns
+            ####################################################
         if self.quit:
             pygame.quit()
             sys.exit()
