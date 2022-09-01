@@ -24,6 +24,8 @@ from slam.ekf import EKF
 from slam.robot import Robot
 import slam.aruco_detector as aruco
 
+# custom
+import SLAM_eval2
 
 class Operate:
     def __init__(self, args):
@@ -54,7 +56,8 @@ class Operate:
                         'inference': False,
                         'output': False,
                         'save_inference': False,
-                        'save_image': False}
+                        'save_image': False,
+                        'output2': False}
         self.quit = False
         self.pred_fname = ''
         self.request_recover_robot = False
@@ -143,6 +146,13 @@ class Operate:
             self.output.write_map(self.ekf)
             self.notification = 'Map is saved'
             self.command['output'] = False
+            
+    # save SLAM map (custom)
+    def record_data_custom(self):
+        if self.command['output2']:
+            self.output.write_map2(self.ekf)
+            SLAM_eval2.main()
+            self.command['output2'] = False
 
     # paint the GUI            
     def draw(self, canvas):
@@ -260,6 +270,9 @@ class Operate:
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
             ########### Custom controls ###########
+            # output RMSE during run
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                self.command['output2'] = True
             # # drive forward by 0.4m
             # if event.type == pygame.KEYDOWN and event.key == pygame.K_w:
                 # self.command['motion'] = [2, 0]
@@ -336,6 +349,7 @@ if __name__ == "__main__":
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.record_data()
+        operate.record_data_custom()
         operate.save_image()
         # visualise
         operate.draw(canvas)

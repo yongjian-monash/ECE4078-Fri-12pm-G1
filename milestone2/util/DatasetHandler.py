@@ -109,6 +109,7 @@ class OutputWriter:
         
         self.img_f = open(folder_name+"images.txt", 'w')   
         self.map_f = folder_name+"slam.txt"
+        self.map_f2 = folder_name+"test.txt"
 
         self.image_count = 0
         
@@ -122,6 +123,13 @@ class OutputWriter:
                     "covariance":slam.P[3:,3:].tolist()}
         with open(self.map_f, 'w') as map_f:
             json.dump(map_dict, map_f, indent=2)
+            
+    def write_map2(self, slam):
+        map_dict = {"taglist":slam.taglist,
+                    "map":slam.markers.tolist(),
+                    "covariance":slam.P[3:,3:].tolist()}
+        with open(self.map_f2, 'w') as map_f2:
+            json.dump(map_dict, map_f2, indent=2)
             
     def write_image(self, image, slam):
         img_fname = "{}pred_{}.png".format(self.folder, self.image_count)
