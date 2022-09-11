@@ -25,6 +25,8 @@ sys.path.insert(0,"{}/network/".format(os.getcwd()))
 sys.path.insert(0,"{}/network/scripts".format(os.getcwd()))
 from network.scripts.detector import Detector
 
+# custom added
+import SLAM_eval
 
 class Operate:
     def __init__(self, args):
@@ -55,7 +57,8 @@ class Operate:
                         'inference': False,
                         'output': False,
                         'save_inference': False,
-                        'save_image': False}
+                        'save_image': False,
+                        'output2': False}
         self.quit = False
         self.pred_fname = ''
         self.request_recover_robot = False
@@ -167,6 +170,13 @@ class Operate:
                 self.notification = f'No prediction in buffer, save ignored'
             self.command['save_inference'] = False
 
+    # save SLAM map (custom)
+    def record_data_custom(self):
+        if self.command['output2']:
+            # self.output.write_map2(self.ekf)
+            SLAM_eval.display_marker_rmse()
+            self.command['output2'] = False
+
     # paint the GUI            
     def draw(self, canvas):
         canvas.blit(self.bg, (0, 0))
@@ -229,16 +239,16 @@ class Operate:
         for event in pygame.event.get():
             # drive forward
             if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                pass # TODO: replace with your M1 code
+                self.command['motion'] = [2, 0]
             # drive backward
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                pass # TODO: replace with your M1 code
+                self.command['motion'] = [-2, 0] 
             # turn left
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                pass # TODO: replace with your M1 code
+                self.command['motion'] = [0, 2] 
             # drive right
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                pass # TODO: replace with your M1 code
+                self.command['motion'] = [0, -2] 
             # stop
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self.command['motion'] = [0, 0]
@@ -287,6 +297,9 @@ class Operate:
                 self.quit = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
+            # output RMSE during run
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                self.command['output2'] = True
         if self.quit:
             pygame.quit()
             sys.exit()
@@ -343,6 +356,7 @@ if __name__ == "__main__":
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.record_data()
+        operate.record_data_custom()
         operate.save_image()
         operate.detect_target()
         # visualise

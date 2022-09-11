@@ -87,7 +87,26 @@ def compute_rmse(points1, points2):
     MSE = 1.0/num_points * np.sum(residual**2)
 
     return np.sqrt(MSE)
+    
+def display_marker_rmse():
+    gt_aruco = parse_groundtruth('TRUEMAP.txt')
+    us_aruco = parse_user_map('lab_output/test.txt')
 
+    taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
+    idx = np.argsort(taglist)
+    taglist = np.array(taglist)[idx]
+    us_vec = us_vec[:,idx]
+    gt_vec = gt_vec[:, idx]
+
+    theta, x = solve_umeyama2d(us_vec, gt_vec)
+    us_vec_aligned = apply_transform(theta, x, us_vec)
+    
+    diff = gt_vec - us_vec_aligned
+    rmse = compute_rmse(us_vec, gt_vec)
+    rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)
+    
+    print()
+    print(f"{len(taglist)}, {rmse_aligned}")
 
 if __name__ == '__main__':
     import argparse
