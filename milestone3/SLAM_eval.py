@@ -3,6 +3,7 @@ import ast
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import os
 
 def parse_groundtruth(fname : str) -> dict:
     with open(fname,'r') as f:
@@ -105,6 +106,7 @@ def display_marker_rmse():
     rmse = compute_rmse(us_vec, gt_vec)
     rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)
     
+    # os.system('cls')
     print()
     print(f"{len(taglist)}, {rmse_aligned}")
 
