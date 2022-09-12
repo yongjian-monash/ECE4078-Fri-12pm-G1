@@ -75,12 +75,17 @@ class Operate:
         self.img = np.zeros([240,320,3], dtype=np.uint8)
         self.aruco_img = np.zeros([240,320,3], dtype=np.uint8)
         self.detector_output = np.zeros([240,320], dtype=np.uint8)
-        if args.ckpt == "":
-            self.detector = None
-            self.network_vis = cv2.imread('pics/8bit/detector_splash.png')
-        else:
-            self.detector = Detector(args.ckpt, use_gpu=False)
-            self.network_vis = np.ones((240, 320,3))* 100
+        
+        # if args.ckpt == "":
+            # self.detector = None
+            # self.network_vis = cv2.imread('pics/8bit/detector_splash.png')
+        # else:
+            # self.detector = Detector(args.ckpt, use_gpu=False)
+            # self.network_vis = np.ones((240, 320,3))* 100
+            
+        self.detector = Detector(None, use_gpu=False)
+        self.network_vis = np.ones((240, 320,3))* 100
+        
         self.bg = pygame.image.load('pics/gui_mask.jpg')
 
     # wheel control
@@ -122,7 +127,8 @@ class Operate:
     # using computer vision to detect targets
     def detect_target(self):
         if self.command['inference'] and self.detector is not None:
-            self.detector_output, self.network_vis = self.detector.detect_single_image(self.img)
+            self.detector_output, self.network_vis = self.detector.yolo_detect_single_image(self.img)
+            # self.network_vis = self.detector.yolo_detect_single_image(self.img)
             self.command['inference'] = False
             self.file_output = (self.detector_output, self.ekf)
             self.notification = f'{len(np.unique(self.detector_output))-1} target type(s) detected'
@@ -169,9 +175,7 @@ class Operate:
             else:
                 self.notification = f'No prediction in buffer, save ignored'
             self.command['save_inference'] = False
-
-    # save SLAM map (custom)
-    def record_data_custom(self):
+        # custom function
         if self.command['output2']:
             # self.output.write_map2(self.ekf)
             SLAM_eval.display_marker_rmse()
@@ -356,7 +360,6 @@ if __name__ == "__main__":
         drive_meas = operate.control()
         operate.update_slam(drive_meas)
         operate.record_data()
-        operate.record_data_custom()
         operate.save_image()
         operate.detect_target()
         # visualise

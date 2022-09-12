@@ -9,6 +9,8 @@ from res18_skip import Resnet18Skip
 from torchvision import transforms
 import cv2
 
+import torch
+
 class Detector:
     def __init__(self, ckpt, use_gpu=False):
         self.args = args
@@ -18,8 +20,9 @@ class Detector:
             self.model = self.model.cuda()
         else:
             self.use_gpu = False
-        self.load_weights(ckpt)
+        # self.load_weights(ckpt)
         self.model = self.model.eval()
+        self.yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path='weights.pt')
         cmd_printer.divider(text="warning")
         print('This detector uses "RGB" input convention by default')
         print('If you are using Opencv, the image is likely to be in "BRG"!!!')
@@ -41,7 +44,35 @@ class Detector:
         print(f'Inference Time {dt:.2f}s, approx {1/dt:.2f}fps', end="\r")
         colour_map = self.visualise_output(pred)
         return pred, colour_map
-
+        
+    def yolo_detect_single_image(self, img):
+        tick = time.time()
+        results = self.yolo_model(img, size=640)
+        dt = time.time() - tick
+        # print(f'Inference Time {dt:.2f}s, approx {1/dt:.2f}fps', end="\r")
+        
+        ########## Retrieve yolov5 output and convert to resnet output ##########
+        # results.save() # save yolov5 output image
+        # results.render() # render results.ims[0] to return image with bounding box
+        # bbox_img = results.ims[0] # image with bounding box
+        detected_obj = (results.xyxy[0]).numpy()
+        
+        # yolov5 output format = [xmin, ymin, xmax, ymax, confidence, class, name]
+        # resnet output format = image of 0 for background, class number for each object
+        pred = np.uint8(np.zeros((img.shape[0], img.shape[1])))
+        num_obj = detected_obj.shape[0]
+        for i in range(num_obj):
+            p1 = (int(detected_obj[i][0]), int(detected_obj[i][1]))
+            p2 = (int(detected_obj[i][2]), int(detected_obj[i][3]))
+            obj_class = int(detected_obj[i][5])
+            cv2.rectangle(pred, p1, p2, obj_class+1, -1)
+        #########################################################################
+        
+        colour_map = self.visualise_output(pred)
+        
+        # return pred, bbox_img # original yolov5 output
+        return pred, colour_map
+    
     def visualise_output(self, nn_output):
         r = np.zeros_like(nn_output).astype(np.uint8)
         g = np.zeros_like(nn_output).astype(np.uint8)
@@ -67,14 +98,14 @@ class Detector:
             pt = (pt[0], pt[1]+h+pad)
         return colour_map
 
-    def load_weights(self, ckpt_path):
-        ckpt_exists = os.path.exists(ckpt_path)
-        if ckpt_exists:
-            ckpt = torch.load(ckpt_path,
-                              map_location=lambda storage, loc: storage)
-            self.model.load_state_dict(ckpt['weights'])
-        else:
-            print(f'checkpoint not found, weights are randomly initialised')
+    # def load_weights(self, ckpt_path):
+        # ckpt_exists = os.path.exists(ckpt_path)
+        # if ckpt_exists:
+            # ckpt = torch.load(ckpt_path,
+                              # map_location=lambda storage, loc: storage)
+            # self.model.load_state_dict(ckpt['weights'])
+        # else:
+            # print(f'checkpoint not found, weights are randomly initialised')
             
     @staticmethod
     def np_img2torch(np_img, use_gpu=False, _size=(192, 256)):
