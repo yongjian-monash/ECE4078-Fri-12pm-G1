@@ -68,11 +68,30 @@ if __name__ == '__main__':
     redapple_est, greenapple_est, orange_est, mango_est, capsicum_est = parse_map(args.est)
     
     # compute average distance between a target and its closest estimation
-    redapple_dist = compute_dist(redapple_gt,redapple_est)
-    greenapple_dist = compute_dist(greenapple_gt,greenapple_est)
-    orange_dist = compute_dist(orange_gt, orange_est)
-    mango_dist = compute_dist(mango_gt, mango_est)
-    capsicum_dist = compute_dist(capsicum_gt, capsicum_est)
+    if bool(redapple_est):
+        redapple_dist = compute_dist(redapple_gt,redapple_est)
+    else:
+        redapple_dist = -1
+        
+    if bool(greenapple_est):
+        greenapple_dist = compute_dist(greenapple_gt,greenapple_est)
+    else:
+        greenapple_dist = -1
+        
+    if bool(orange_est):
+        orange_dist = compute_dist(orange_gt, orange_est)
+    else:
+        orange_dist = -1
+        
+    if bool(mango_est):
+        mango_dist = compute_dist(mango_gt, mango_est)
+    else:
+        mango_dist = -1
+    
+    if bool(capsicum_est):
+        capsicum_dist = compute_dist(capsicum_gt, capsicum_est)
+    else:
+        capsicum_dist = -1
     
     av_dist = (redapple_dist+greenapple_dist+orange_dist+mango_dist+capsicum_dist)/5
     
@@ -80,3 +99,35 @@ if __name__ == '__main__':
     print("redapple = {}, greenapple = {}, orange = {}, mango = {}, capsicum = {}".format(redapple_dist,greenapple_dist,orange_dist,mango_dist,capsicum_dist))
     print("estimation error: ", av_dist)
 
+# main program
+# if __name__ == '__main__':
+    # import argparse
+
+    # parser = argparse.ArgumentParser("Matching the estimated map and the true map")
+    # parser.add_argument("truth", type=str, help="The ground truth file name.")
+    # parser.add_argument("est", type=str, help="The estimate file name.")
+    # args, _ = parser.parse_known_args()
+
+    # # read in ground truth and estimations
+    # redapple_gt, greenapple_gt, orange_gt, mango_gt, capsicum_gt = parse_map(args.truth)
+    # redapple_est, greenapple_est, orange_est, mango_est, capsicum_est = parse_map(args.est)
+    
+    # # compute average distance between a target and its closest estimation
+    # if (bool(redapple_est) and bool(greenapple_est) and bool(orange_est) and bool(mango_est) and bool(capsicum_est)): # added line
+        # redapple_dist = compute_dist(redapple_gt,redapple_est)
+        # greenapple_dist = compute_dist(greenapple_gt,greenapple_est)
+        # orange_dist = compute_dist(orange_gt, orange_est)
+        # mango_dist = compute_dist(mango_gt, mango_est)
+        # capsicum_dist = compute_dist(capsicum_gt, capsicum_est)
+    # else:
+        # redapple_dist = -1
+        # greenapple_dist = -1
+        # orange_dist = -1
+        # mango_dist = -1
+        # capsicum_dist = -1
+    
+    # av_dist = (redapple_dist+greenapple_dist+orange_dist+mango_dist+capsicum_dist)/5
+    
+    # print("Average distances between the targets and the closest estimations:")
+    # print("redapple = {}, greenapple = {}, orange = {}, mango = {}, capsicum = {}".format(redapple_dist,greenapple_dist,orange_dist,mango_dist,capsicum_dist))
+    # print("estimation error: ", av_dist)

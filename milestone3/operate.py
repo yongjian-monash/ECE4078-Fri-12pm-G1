@@ -128,7 +128,6 @@ class Operate:
     def detect_target(self):
         if self.command['inference'] and self.detector is not None:
             self.detector_output, self.network_vis = self.detector.yolo_detect_single_image(self.img)
-            # self.network_vis = self.detector.yolo_detect_single_image(self.img)
             self.command['inference'] = False
             self.file_output = (self.detector_output, self.ekf)
             self.notification = f'{len(np.unique(self.detector_output))-1} target type(s) detected'
