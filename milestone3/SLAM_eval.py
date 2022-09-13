@@ -3,11 +3,14 @@ import ast
 import numpy as np
 import json
 import matplotlib.pyplot as plt
-import os
 
 def parse_groundtruth(fname : str) -> dict:
-    with open(fname,'r') as f:
-        gt_dict = ast.literal_eval(f.readline())
+    with open(fname, 'r') as f:
+        try:
+            gt_dict = json.load(f)                   
+        except ValueError as e:
+            with open(fname, 'r') as f:
+                gt_dict = ast.literal_eval(f.readline()) 
         
         aruco_dict = {}
         for key in gt_dict:
@@ -18,7 +21,11 @@ def parse_groundtruth(fname : str) -> dict:
 
 def parse_user_map(fname : str) -> dict:
     with open(fname, 'r') as f:
-        usr_dict = ast.literal_eval(f.read())
+        try:
+            usr_dict = json.load(f)                   
+        except ValueError as e:
+            with open(fname, 'r') as f:
+                usr_dict = ast.literal_eval(f.readline()) 
         aruco_dict = {}
         for (i, tag) in enumerate(usr_dict["taglist"]):
             aruco_dict[tag] = np.reshape([usr_dict["map"][0][i],usr_dict["map"][1][i]], (2,1))
@@ -88,27 +95,7 @@ def compute_rmse(points1, points2):
     MSE = 1.0/num_points * np.sum(residual**2)
 
     return np.sqrt(MSE)
-    
-def display_marker_rmse():
-    gt_aruco = parse_groundtruth('TRUEMAP.txt')
-    us_aruco = parse_user_map('lab_output/test.txt')
 
-    taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
-    idx = np.argsort(taglist)
-    taglist = np.array(taglist)[idx]
-    us_vec = us_vec[:,idx]
-    gt_vec = gt_vec[:, idx]
-
-    theta, x = solve_umeyama2d(us_vec, gt_vec)
-    us_vec_aligned = apply_transform(theta, x, us_vec)
-    
-    diff = gt_vec - us_vec_aligned
-    rmse = compute_rmse(us_vec, gt_vec)
-    rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)
-    
-    # os.system('cls')
-    print()
-    print(f"{len(taglist)}, {rmse_aligned}")
 
 if __name__ == '__main__':
     import argparse
