@@ -72,11 +72,30 @@ if __name__ == '__main__':
     redapple_est, greenapple_est, orange_est, mango_est, capsicum_est = parse_map(args.est)
     
     # compute average distance between a target and its closest estimation
-    redapple_dist = compute_dist(redapple_gt,redapple_est)
-    greenapple_dist = compute_dist(greenapple_gt,greenapple_est)
-    orange_dist = compute_dist(orange_gt, orange_est)
-    mango_dist = compute_dist(mango_gt, mango_est)
-    capsicum_dist = compute_dist(capsicum_gt, capsicum_est)
+    if bool(redapple_est):
+        redapple_dist = compute_dist(redapple_gt,redapple_est)
+    else:
+        redapple_dist = -1
+        
+    if bool(greenapple_est):
+        greenapple_dist = compute_dist(greenapple_gt,greenapple_est)
+    else:
+        greenapple_dist = -1
+        
+    if bool(orange_est):
+        orange_dist = compute_dist(orange_gt, orange_est)
+    else:
+        orange_dist = -1
+        
+    if bool(mango_est):
+        mango_dist = compute_dist(mango_gt, mango_est)
+    else:
+        mango_dist = -1
+    
+    if bool(capsicum_est):
+        capsicum_dist = compute_dist(capsicum_gt, capsicum_est)
+    else:
+        capsicum_dist = -1
     
     av_dist = (redapple_dist+greenapple_dist+orange_dist+mango_dist+capsicum_dist)/5
     
