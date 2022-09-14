@@ -63,15 +63,28 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
     # actual sizes of targets [For the simulation models]
     # You need to replace these values for the real world objects
     target_dimensions = []
-    redapple_dimensions = [0.074, 0.074, 0.087]
+    
+    # measured parameters
+    camera_offset = 0.067 # 6.7cm from robot center
+    redapple_dimensions = [0.074, 0.074, 0.0950]
+    greenapple_dimensions = [0.081, 0.081, 0.0841]
+    orange_dimensions = [0.075, 0.075, 0.0797]
+    mango_dimensions = [0.113, 0.067, 0.0599]
+    capsicum_dimensions = [0.073, 0.073, 0.0957]
+    
+    # redapple_dimensions = [0.074, 0.074, 0.087]
     target_dimensions.append(redapple_dimensions)
-    greenapple_dimensions = [0.081, 0.081, 0.067]
-    target_dimensions.append(greenapple_dimensions)
-    orange_dimensions = [0.075, 0.075, 0.072]
+    
+    # greenapple_dimensions = [0.081, 0.081, 0.067]
+    target_dimensions.append(greenapple_dimensions) 
+    
+    # orange_dimensions = [0.075, 0.075, 0.072]
     target_dimensions.append(orange_dimensions)
-    mango_dimensions = [0.113, 0.067, 0.058] # measurements when laying down
+    
+    # mango_dimensions = [0.113, 0.067, 0.058] # measurements when laying down
     target_dimensions.append(mango_dimensions)
-    capsicum_dimensions = [0.073, 0.073, 0.088]
+    
+    # capsicum_dimensions = [0.073, 0.073, 0.088]
     target_dimensions.append(capsicum_dimensions)
 
     target_list = ['redapple', 'greenapple', 'orange', 'mango', 'capsicum']
@@ -88,10 +101,16 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
         # This is the default code which estimates every pose to be (0,0)
         target_pose = {'x': 0.0, 'y': 0.0}
         d = focal_length * true_height/box[3][0]
-        u_0 = camera_matrix[0][2]
-        theta_f = np.arctan((box[0][0] - u_0)/focal_length)
-        target_pose['x'] = robot_pose[0][0] + d*np.cos(robot_pose[2][0] + theta_f)
-        target_pose['y'] = robot_pose[1][0] + d*np.sin(robot_pose[2][0] + theta_f)
+        
+        # more accurate estimation
+        # u_0 = camera_matrix[0][2]
+        # theta_f = np.arctan((box[0][0] - u_0)/focal_length)
+        # target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0] + theta_f)
+        # target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0] + theta_f)
+        
+        # assume fruit is always in x center of image
+        target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0])
+        target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0])
         
         target_pose_dict[target_list[target_num-1]] = target_pose
         ###########################################
