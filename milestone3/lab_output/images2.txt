@@ -1,0 +1,6 @@
+{"pose": [[0.8], [-0.4], [0]], "imgfname": "lab_output/pred2_0.png"}
+{"pose": [[1.2], [0.0], [2.356194490192345]], "imgfname": "lab_output/pred2_1.png"}
+{"pose": [[0.4], [-0.8], [3.141592653589793]], "imgfname": "lab_output/pred2_2.png"}
+{"pose": [[-0.4], [0.8], [3.141592653589793]], "imgfname": "lab_output/pred2_3.png"}
+{"pose": [[-0.4], [-0.4], [1.5707963267948966]], "imgfname": "lab_output/pred2_4.png"}
+{"pose": [[-0.8], [-0.8], [0]], "imgfname": "lab_output/pred2_5.png"}
