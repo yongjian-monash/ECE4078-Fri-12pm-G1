@@ -185,65 +185,67 @@ class Operate:
             self.command['output2'] = False
 
     # paint the GUI            
-    # def draw(self, canvas):
-        # canvas.blit(self.bg, (0, 0))
-        # text_colour = (220, 220, 220)
-        # v_pad = 40
-        # h_pad = 20
+    def draw(self, canvas):
+        canvas.blit(self.bg, (0, 0))
+        text_colour = (220, 220, 220)
+        v_pad = 40
+        h_pad = 20
 
-        # # paint SLAM outputs
-        # ekf_view = self.ekf.draw_slam_state(res=(320, 480+v_pad),
-            # not_pause = self.ekf_on)
-        # canvas.blit(ekf_view, (2*h_pad+320, v_pad))
-        # robot_view = cv2.resize(self.aruco_img, (320, 240))
-        # self.draw_pygame_window(canvas, robot_view, 
-                                # position=(h_pad, v_pad)
-                                # )
+        # paint SLAM outputs
+        ekf_view = self.ekf.draw_slam_state(res=(320, 480+v_pad),
+            not_pause = self.ekf_on)
+        canvas.blit(ekf_view, (2*h_pad+320, v_pad))
+        robot_view = cv2.resize(self.aruco_img, (320, 240))
+        self.draw_pygame_window(canvas, robot_view, 
+                                position=(h_pad, v_pad)
+                                )
 
-        # # for target detector (M3)
-        # detector_view = cv2.resize(self.network_vis,
-                                   # (320, 240), cv2.INTER_NEAREST)
-        # self.draw_pygame_window(canvas, detector_view, 
-                                # position=(h_pad, 240+2*v_pad)
-                                # )
+        # for target detector (M3)
+        detector_view = cv2.resize(self.network_vis,
+                                   (320, 240), cv2.INTER_NEAREST)
+        self.draw_pygame_window(canvas, detector_view, 
+                                position=(h_pad, 240+2*v_pad)
+                                )
 
-        # # canvas.blit(self.gui_mask, (0, 0))
-        # self.put_caption(canvas, caption='SLAM', position=(2*h_pad+320, v_pad))
-        # self.put_caption(canvas, caption='Detector',
-                         # position=(h_pad, 240+2*v_pad))
-        # self.put_caption(canvas, caption='PiBot Cam', position=(h_pad, v_pad))
+        # canvas.blit(self.gui_mask, (0, 0))
+        self.put_caption(canvas, caption='SLAM', position=(2*h_pad+320, v_pad))
+        self.put_caption(canvas, caption='Detector',
+                         position=(h_pad, 240+2*v_pad))
+        self.put_caption(canvas, caption='PiBot Cam', position=(h_pad, v_pad))
 
-        # notifiation = TEXT_FONT.render(self.notification,
-                                          # False, text_colour)
-        # canvas.blit(notifiation, (h_pad+10, 596))
+        notifiation = TEXT_FONT.render(self.notification,
+                                          False, text_colour)
+        canvas.blit(notifiation, (h_pad+10, 596))
 
-        # time_remain = self.count_down - time.time() + self.start_time
-        # if time_remain > 0:
-            # time_remain = f'Count Down: {time_remain:03.0f}s'
-        # elif int(time_remain)%2 == 0:
-            # time_remain = "Time Is Up !!!"
-        # else:
-            # time_remain = ""
-        # count_down_surface = TEXT_FONT.render(time_remain, False, (50, 50, 50))
-        # canvas.blit(count_down_surface, (2*h_pad+320+5, 530))
-        # return canvas
+        time_remain = self.count_down - time.time() + self.start_time
+        if time_remain > 0:
+            time_remain = f'Count Down: {time_remain:03.0f}s'
+        elif int(time_remain)%2 == 0:
+            time_remain = "Time Is Up !!!"
+        else:
+            time_remain = ""
+        count_down_surface = TEXT_FONT.render(time_remain, False, (50, 50, 50))
+        canvas.blit(count_down_surface, (2*h_pad+320+5, 530))
+        return canvas
 
-    # @staticmethod
-    # def draw_pygame_window(canvas, cv2_img, position):
-        # cv2_img = np.rot90(cv2_img)
-        # view = pygame.surfarray.make_surface(cv2_img)
-        # view = pygame.transform.flip(view, True, False)
-        # canvas.blit(view, position)
+    @staticmethod
+    def draw_pygame_window(canvas, cv2_img, position):
+        cv2_img = np.rot90(cv2_img)
+        view = pygame.surfarray.make_surface(cv2_img)
+        view = pygame.transform.flip(view, True, False)
+        canvas.blit(view, position)
     
-    # @staticmethod
-    # def put_caption(canvas, caption, position, text_colour=(200, 200, 200)):
-        # caption_surface = TITLE_FONT.render(caption,
-                                          # False, text_colour)
-        # canvas.blit(caption_surface, (position[0], position[1]-25))
+    @staticmethod
+    def put_caption(canvas, caption, position, text_colour=(200, 200, 200)):
+        caption_surface = TITLE_FONT.render(caption,
+                                          False, text_colour)
+        canvas.blit(caption_surface, (position[0], position[1]-25))
 
-    # # keyboard teleoperation        
-    # def update_keyboard(self):
-        # for event in pygame.event.get():
+    # keyboard teleoperation        
+    def update_keyboard(self):
+        for event in pygame.event.get():
+            # if event.type == pygame.KEYDOWN and event.key == pygame.a:
+                # self.command['motion'] = [2, 0] # start driving
             # # drive forward
             # if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
                 # self.command['motion'] = [2, 0]
@@ -302,14 +304,14 @@ class Operate:
             # # quit
             # elif event.type == pygame.QUIT:
                 # self.quit = True
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # self.quit = True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.quit = True
             # # output RMSE during run
             # elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
                 # self.command['output2'] = True
-        # if self.quit:
-            # pygame.quit()
-            # sys.exit()
+        if self.quit:
+            pygame.quit()
+            sys.exit()
 
         
 if __name__ == "__main__":
@@ -360,12 +362,12 @@ if __name__ == "__main__":
     while start:
         operate.update_keyboard()
         operate.take_pic()
-        drive_meas = operate.control()
-        operate.update_slam(drive_meas)
-        operate.record_data()
-        operate.save_image()
-        operate.detect_target()
-        # visualise
+        # drive_meas = operate.control()
+        # operate.update_slam(drive_meas)
+        # operate.record_data()
+        # operate.save_image()
+        # operate.detect_target()
+        # # visualise
         operate.draw(canvas)
         pygame.display.update()
 
