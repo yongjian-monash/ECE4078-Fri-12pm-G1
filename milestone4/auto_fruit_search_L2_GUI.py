@@ -27,7 +27,8 @@ from network.scripts.detector import Detector
 
 # custom added
 import SLAM_eval
-import auto_fruit_search_L1 as L1
+from auto_fruit_search_L2 import *
+from path_planning import *
 
 class Operate:
     def __init__(self, args):
@@ -59,7 +60,8 @@ class Operate:
                         'output': False,
                         'save_inference': False,
                         'save_image': False,
-                        'output2': False}
+                        'output2': False,
+                        'auto_fruit_search': False}
         self.quit = False
         self.pred_fname = ''
         self.request_recover_robot = False
@@ -88,6 +90,8 @@ class Operate:
         self.network_vis = np.ones((240, 320,3))* 100
         
         self.bg = pygame.image.load('pics/gui_mask.jpg')
+        
+        self.waypoints_list = []
 
     # # wheel control
     # def control(self):       
@@ -309,6 +313,113 @@ class Operate:
             # pygame.quit()
             # sys.exit()
             
+    def generate_path(self):
+        gen_cor = GenerateCoord('M4_true_map.txt')
+        # fruit_list, _, _ = gen_cor.read_true_map()
+        # obs_fruit_list = []
+        spoofed_obs = []
+        spoofed_ox = [[],[],[],[]]
+        spoofed_oy = [[],[],[],[]]
+        # prev_len = len(spoofed_obs)
+
+        sx, sy, gx, gy, fx, fy, ox, oy, face_angle = gen_cor.generate_points(spoofed_obs)
+        dstarlite = DStarLite(ox, oy)
+        
+        self.waypoints_list = []
+        for i in range(len(sx)):
+            _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
+            pathx.pop(0)
+            pathy.pop(0)
+            temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+            self.waypoints_list.append(temp)
+        print(self.waypoints_list)
+        print("Path generated")
+        
+    def auto_fruit_search(self):
+        if self.command['auto_fruit_search']:
+            if any(self.waypoints_list):
+                if self.waypoints_list[0]:
+                    # estimate the robot's pose
+                    robot_pose = get_robot_pose(self)
+
+                    # robot drives to the waypoint
+                    drive_to_point(self.waypoints_list[0][0],robot_pose,self)
+                    robot_pose = get_robot_pose(self)
+                    print("Finished driving to waypoint: {}; New robot pose: {}".format(self.waypoints_list[0][0],robot_pose))
+                    
+                    self.waypoints_list[0].pop(0)
+                    print(self.waypoints_list)
+
+                    if not self.waypoints_list[0]:
+                        self.waypoints_list.pop(0)
+                        print("Sleep 3 seconds")
+                        time.sleep(3)
+            else:
+                print("Waypoints list is empty")
+                self.waypoints_list = []
+                self.command['auto_fruit_search'] = False
+            
+    def update_keyboard_L2(self):
+        for event in pygame.event.get():
+            # run SLAM
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                n_observed_markers = len(self.ekf.taglist)
+                if n_observed_markers == 0:
+                    if not self.ekf_on:
+                        self.notification = 'SLAM is running'
+                        self.ekf_on = True
+                    else:
+                        self.notification = '> 2 landmarks is required for pausing'
+                elif n_observed_markers < 3:
+                    self.notification = '> 2 landmarks is required for pausing'
+                else:
+                    if not self.ekf_on:
+                        self.request_recover_robot = True
+                    self.ekf_on = not self.ekf_on
+                    if self.ekf_on:
+                        self.notification = 'SLAM is running'
+                    else:
+                        self.notification = 'SLAM is paused'
+                        
+                # read in the true map
+                fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+                lms = []
+                for i,lm in enumerate(aruco_true_pos):
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    lms.append(measure_lm)
+                self.ekf.add_landmarks_init(lms)   
+                
+            # run path planning algorithm
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                self.generate_path()
+                
+            # drive to waypoints
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                self.command['auto_fruit_search'] = True
+                    
+            # reset path planning algorithm
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                self.waypoints_list = []
+                self.ekf.reset()
+                
+                # read in the true map
+                fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+                lms = []
+                for i,lm in enumerate(aruco_true_pos):
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    lms.append(measure_lm)
+                self.ekf.add_landmarks_init(lms)   
+                
+            # quit
+            elif event.type == pygame.QUIT:
+                self.quit = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.quit = True
+
+        if self.quit:
+            pygame.quit()
+            sys.exit()
+            
         
 if __name__ == "__main__":
     import argparse
@@ -354,114 +465,22 @@ if __name__ == "__main__":
             counter += 2
 
     operate = Operate(args)
-    quitgame = False
-    waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
-    x_active = False
-    y_active = False
 
     while start:
-        # take latest picture and update slam
+        operate.update_keyboard_L2()
+        
+        # take latest pic and update slam
         operate.take_pic()
         lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
         drive_meas = measure.Drive(lv, rv, 0.0)
         operate.update_slam(drive_meas)
-
+        
         # update pygame display
         operate.draw(canvas)
         pygame.display.update()
         
-        # enter the waypoints
-        # instead of manually enter waypoints in command line, you can get coordinates by clicking on a map (GUI input), see camera_calibration.py
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                quitgame = True
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                n_observed_markers = len(operate.ekf.taglist)
-                if n_observed_markers == 0:
-                    if not operate.ekf_on:
-                        print('SLAM is running')
-                        operate.ekf_on = True
-                    else:
-                        print('> 2 landmarks is required for pausing')
-                elif n_observed_markers < 3:
-                    print('> 2 landmarks is required for pausing')
-                else:
-                    if not operate.ekf_on:
-                        operate.request_recover_robot = True
-                    operate.ekf_on = not operate.ekf_on
-                    if operate.ekf_on:
-                        print('SLAM is running')
-                    else:
-                        print('SLAM is paused')
-                        
-                # read in the true map
-                fruits_list, fruits_true_pos, aruco_true_pos = L1.read_true_map('M4_true_map.txt')
-                lms = []
-                for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
-                    lms.append(measure_lm)
-                operate.ekf.add_landmarks_init(lms)   
-                operate.output.write_map(operate.ekf)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_q: # reset
-                x_active = False
-                y_active = False
-                x = ""
-                y = ""
-                operate.notification = ""
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_w: # receive input and drive
-                x_active = True
-                x = ""
-                y = ""
-                operate.notification = f"Waypoint X: {x}, Waypoint Y: {y}"
-            elif event.type == pygame.KEYDOWN and x_active:
-                if event.key == pygame.K_RETURN:
-                    x_active = False
-                    y_active = True
-                    
-                    try:
-                        x = float(x)
-                    except ValueError:
-                        operate.notification="Please enter a number."
-                        x_active = False
-                        y_active = False
-                        x = ""
-                        y = ""
-                elif event.key == pygame.K_BACKSPACE:
-                    x =  x[:-1]
-                else:
-                    x += event.unicode
-                    operate.notification = f"Waypoint X: {x}, Waypoint Y: {y}"
-            elif event.type == pygame.KEYDOWN and y_active:
-                if event.key == pygame.K_RETURN:
-                    y_active = False
-                    
-                    try:
-                        y = float(y)
-                        drive_flag = 1
-                    except ValueError:
-                        operate.notification="Please enter a number."
-                        x_active = False
-                        y_active = False
-                        x = ""
-                        y = ""
-                        
-                    if drive_flag:
-                        # estimate the robot's pose
-                        robot_pose = L1.get_robot_pose(operate)
-
-                        # robot drives to the waypoint
-                        waypoint = [x,y]
-                        L1.drive_to_point(waypoint,robot_pose,operate)
-                        robot_pose = L1.get_robot_pose(operate)
-                        print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
-                        drive_flag = 0
-                elif event.key == pygame.K_BACKSPACE:
-                    y =  y[:-1]
-                else:
-                    y += event.unicode
-                    operate.notification = f"Waypoint X: {x}, Waypoint Y: {y}"
+        # perform fruit search
+        operate.auto_fruit_search()
         
-        if quitgame:
-            pygame.quit()
-            sys.exit()
+

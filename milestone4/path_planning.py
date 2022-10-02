@@ -16,7 +16,7 @@ import random
 import json
 import ast
 
-show_animation = True
+show_animation = False
 pause_time = 0.1
 p_create_random_obstacle = 0
 
@@ -43,15 +43,16 @@ class DStarLite:
 
     # Please adjust the heuristic function (h) if you change the list of
     # possible motions
+    d = 2
     motions = [
-        Node(1, 0, 1),
-        Node(0, 1, 1),
-        Node(-1, 0, 1),
-        Node(0, -1, 1),
-        Node(1, 1, math.sqrt(2)),
-        Node(1, -1, math.sqrt(2)),
-        Node(-1, 1, math.sqrt(2)),
-        Node(-1, -1, math.sqrt(2))
+        Node(d, 0, d),
+        Node(0, d, d),
+        Node(-d, 0, d),
+        Node(0, -d, d),
+        # Node(d, d, math.sqrt(2*(d**2))),
+        # Node(d, -d, math.sqrt(2*(d**2))),
+        # Node(-d, d, math.sqrt(2*(d**2))),
+        # Node(-d, -d, math.sqrt(2*(d**2)))
     ]
 
     def __init__(self, ox: list, oy: list):
@@ -436,6 +437,8 @@ class GenerateCoord:
             ox.append(-16)
             oy.append(i)
         for i in self.aruco_true_pos:
+            ox.append(int(i[0] * 10))
+            oy.append(int(i[1] * 10))
             for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 1 + 1):
                 ox.append(j)
                 oy.append(int(i[1] * 10) - 1)
@@ -449,6 +452,8 @@ class GenerateCoord:
                 ox.append(int(i[0] * 10) + 1)
                 oy.append(j)
         for i in self.fruit_true_pos:
+            ox.append(int(i[0] * 10))
+            oy.append(int(i[1] * 10))
             for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 1 + 1):
                 ox.append(j)
                 oy.append(int(i[1] * 10) - 1)
@@ -499,7 +504,7 @@ def main():
     
     sx, sy, gx, gy, fx, fy, ox, oy, face_angle = gen_cor.generate_points(spoofed_obs)
     if show_animation:
-        # plt.figure(figsize=(4.8,4.8))
+        plt.figure(figsize=(4.8,4.8))
         plt.plot(ox, oy, ".k")
         plt.plot(sx, sy, "og")
         plt.plot(gx, gy, "xb")
@@ -526,12 +531,21 @@ def main():
         # plt.show()
         plt.pause(pause_time)
         
-        dstarlite = DStarLite(ox, oy)
-        print(len(sx))
-        for i in range(len(sx)):
-            _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
-            print(pathx[0]/10.0)
-            print(pathy[0]/10.0)
+    dstarlite = DStarLite(ox, oy)
+
+    waypoints_x = []
+    waypoints_y = []
+    for i in range(len(sx)):
+        _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
+        pathx.pop(0)
+        pathy.pop(0)
+        waypoints_x.extend(pathx)
+        waypoints_y.extend(pathy)
+    waypoints_x = [x/10.0 for x in waypoints_x]
+    waypoints_y = [y/10.0 for y in waypoints_y]
+    waypoints_list = [[x,y] for x, y in zip(waypoints_x, waypoints_y)]
+        
+    plt.show()
 
 def ori():
 
@@ -607,4 +621,7 @@ def ori():
                    
 
 if __name__ == "__main__":
+    show_animation = True
+    pause_time = 0.1
+    p_create_random_obstacle = 0
     main()

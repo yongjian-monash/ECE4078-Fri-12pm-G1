@@ -234,6 +234,12 @@ if __name__ == "__main__":
 
     # The following code is only a skeleton code the semi-auto fruit searching task
     while True:
+        # take latest picture and update slam
+        operate.take_pic()
+        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        drive_meas = measure.Drive(lv, rv, 0.0)
+        operate.update_slam(drive_meas)
+        
         # enter the waypoints
         # instead of manually enter waypoints in command line, you can get coordinates by clicking on a map (GUI input), see camera_calibration.py
         x,y = 0.0,0.0

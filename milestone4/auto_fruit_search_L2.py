@@ -22,12 +22,9 @@ import measure as measure
 
 # custom
 from operate import Operate
-import tkinter
 import matplotlib
 import matplotlib.pyplot as plt
-matplotlib.use('TkAgg')
-plt.style.use('ggplot')
-from path_planning import DStarLite, GenerateCoord, Node
+from path_planning import *
 
 
 def read_true_map(fname):
@@ -157,6 +154,19 @@ def drive_to_point(waypoint, robot_pose, operate):
         operate.update_slam(turn_drive_meas)
     # print(operate.ekf.robot.state)
     
+    # time.sleep(0.2)
+    
+    # take latest pic and update slam
+    for _ in range(5):
+        operate.take_pic()
+        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        drive_meas = measure.Drive(lv, rv, 0.0)
+        operate.update_slam(drive_meas)
+        
+    # # update pygame display
+    # operate.draw(canvas)
+    # pygame.display.update()
+    
     # compute driving distance to waypoint
     pos_diff = np.hypot(x_diff, y_diff)
     
@@ -167,9 +177,21 @@ def drive_to_point(waypoint, robot_pose, operate):
     
     lv, rv = operate.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
     lin_drive_meas = measure.Drive(lv, rv, drive_time)
-    print(lin_drive_meas)
     operate.update_slam(lin_drive_meas)
     # print(operate.ekf.robot.state)
+    
+    # time.sleep(0.2)
+    
+    # take latest pic and update slam
+    for _ in range(5):
+        operate.take_pic()
+        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        drive_meas = measure.Drive(lv, rv, 0.0)
+        operate.update_slam(drive_meas)
+        
+    # # update pygame display
+    # operate.draw(canvas)
+    # pygame.display.update()
     ####################################################
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
@@ -187,50 +209,37 @@ def get_robot_pose(operate):
 
     return robot_pose
     
-def auto_fruit_search():
-    # if self.command['auto_fruit_search'] == True:
+def generate_path_L2():
     gen_cor = GenerateCoord('M4_true_map.txt')
-    fruit_list, _, _ = gen_cor.read_true_map()
-    obs_fruit_list = []
+    # fruit_list, _, _ = gen_cor.read_true_map()
+    # obs_fruit_list = []
     spoofed_obs = []
     spoofed_ox = [[],[],[],[]]
     spoofed_oy = [[],[],[],[]]
-    prev_len = len(spoofed_obs)
-    
-    show_animation = True
-    pause_time = 0.1
-    p_create_random_obstacle = 0
-    
+    # prev_len = len(spoofed_obs)
+
     sx, sy, gx, gy, fx, fy, ox, oy, face_angle = gen_cor.generate_points(spoofed_obs)
-    if show_animation:
-        plt.plot(ox, oy, ".k")
-        plt.plot(sx, sy, "og")
-        plt.plot(gx, gy, "xb")
-        plt.plot(fx, fy, "or")
-        plt.plot()
-        plt.grid(True)
-        # plt.gca().set_aspect("equal")
-        # plt.axis("equal")
-        label_column = ['Start', 'Goal', 'Fruits', 'Path taken',
-                        'Current computed path', 'Previous computed path',
-                        'Obstacles']
-        columns = [plt.plot([], [], symbol, color=colour, alpha=alpha)[0]
-                   for symbol, colour, alpha in [['o', 'g', 1],
-                                                 ['x', 'b', 1],
-                                                 ['o', 'r', 1],
-                                                 ['-', 'r', 1],
-                                                 ['.', 'c', 1],
-                                                 ['.', 'c', 0.3],
-                                                 ['.', 'k', 1]]]
-        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:",
-                   fontsize="xx-small")
-        plt.plot()
-        plt.xlim(-18, 18)
-        plt.ylim(-18, 18)
-        plt.xticks(range(-16, 17))
-        plt.yticks(range(-16, 17))
-        plt.show()
-        # plt.pause(pause_time)
+    dstarlite = DStarLite(ox, oy)
+    
+    waypoints_x = []
+    waypoints_y = []
+    # global waypoints_list 
+    # waypoints_list = []
+    global waypoints_list2
+    waypoints_list2 = []
+    for i in range(len(sx)):
+        _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
+        pathx.pop(0)
+        pathy.pop(0)
+        # waypoints_x.extend(pathx)
+        # waypoints_y.extend(pathy)
+        temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+        waypoints_list2.append(temp)
+    # waypoints_x = [x/10.0 for x in waypoints_x]
+    # waypoints_y = [y/10.0 for y in waypoints_y]
+    # waypoints_list = [[x,y] for x, y in zip(waypoints_x, waypoints_y)]
+    # print(waypoints_list)
+    print(waypoints_list2)
     
     # for i in range(1):
         # # generate starting, goal, and obstacles points
@@ -322,52 +331,39 @@ if __name__ == "__main__":
     operate.ekf.add_landmarks_init(lms)   
     operate.output.write_map(operate.ekf)
     
-    auto_fruit_search()
-
-    # fruit_no = 3
-    # fruit_tag_dict = {'redapple':1,'greenapple':2,'orange':3,'mango':4,'capsicum':5,}
-    # fruits = []
-    # for i,fr in enumerate(fruits_true_pos):
-        # print("fruits", fr)
-        # measure_fr = measure.Fruits(np.array([[fr[0]],[fr[1]]]),fruit_tag_dict[fruits_list[i]], )
-        # fruits.append(measure_fr)
-        # print(fruit_tag_dict[fruits_list[i]])
-    # operate.ekf.add_fruits(fruits)
-
-    # The following code is only a skeleton code the semi-auto fruit searching task
+    generate_path_L2()
+    
+    print(waypoints_list2)
+    
     # while True:
-        # # enter the waypoints
-        # # instead of manually enter waypoints in command line, you can get coordinates by clicking on a map (GUI input), see camera_calibration.py
-        # x,y = 0.0,0.0
-        # x = input("X coordinate of the waypoint: ")
-        # try:
-            # x = float(x)
-        # except ValueError:
-            # print("Please enter a number.")
-            # continue
-        # y = input("Y coordinate of the waypoint: ")
-        # try:
-            # y = float(y)
-        # except ValueError:
-            # print("Please enter a number.")
-            # continue
-
-        # # estimate the robot's pose
-        # robot_pose = get_robot_pose(operate)
-
-        # # robot drives to the waypoint
-        # waypoint = [x,y]
-        # drive_to_point(waypoint,robot_pose,operate)
-        # robot_pose = get_robot_pose(operate)
-        # print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
-        
-        # # custom
-        # lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
-        # drive_meas = measure.Drive(lv, rv, 0.0)
-        # operate.update_slam(drive_meas)
-
-        # # exit
-        # operate.pibot.set_velocity([0, 0])
-        # uInput = input("Add a new waypoint? [Y/N]")
-        # if uInput == 'N':
+        # if any(waypoints_list2):
+            # if waypoints_list2[0]:
+                # waypoints_list2[0].pop(0)
+                # time.sleep(0.2)
+                # print(waypoints_list2)
+                # if not waypoints_list2[0]:
+                    # waypoints_list2.pop(0)
+                    # print("Sleep 3 seconds")
+                    # time.sleep(3)
+        # else:
+            # print("Waypoint is empty")
             # break
+    
+    # while True:
+        # for event in pygame.event.get():
+            # if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                
+            
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                # # drive robot to next waypoint
+                # if waypoints_list:
+                    # print(waypoints_list)
+                    # # estimate the robot's pose
+                    # robot_pose = get_robot_pose(operate)
+
+                    # # robot drives to the waypoint
+                    # drive_to_point(waypoints_list[0],robot_pose,operate)
+                    # waypoints_list.pop(0)
+                    # robot_pose = get_robot_pose(operate)
+                    # print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
+                    # print(waypoints_list)
