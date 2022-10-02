@@ -127,6 +127,7 @@ class Operate:
             self.ekf.predict(drive_meas)
             self.ekf.add_landmarks(lms)
             self.ekf.update(lms)
+            print(self.ekf.robot.state.squeeze().tolist())
 
     # using computer vision to detect targets
     def detect_target(self):

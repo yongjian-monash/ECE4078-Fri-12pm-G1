@@ -31,6 +31,9 @@ class EKF:
         self.lm_pics.append(pygame.image.load(f_))
         self.pibot_pic = pygame.image.load(f'./pics/8bit/pibot_top.png')
         
+        # True landmark covariance matrix
+        self.init_lm_cov_true = 0
+        
     def reset(self):
         self.robot.state = np.zeros((3, 1))
         self.markers = np.zeros((2,0))
@@ -163,6 +166,25 @@ class EKF:
             self.P = np.concatenate((self.P, np.zeros((self.P.shape[0], 2))), axis=1)
             self.P[-2,-2] = self.init_lm_cov**2
             self.P[-1,-1] = self.init_lm_cov**2
+            
+    def add_landmarks_init(self, measurements): # add true landmark position
+        if not measurements:
+            return
+
+        # Add new landmarks to the state
+        for lm in measurements:
+            if lm.tag in self.taglist:
+                # ignore known tags
+                continue
+
+            self.taglist.append(int(lm.tag))
+            self.markers = np.concatenate((self.markers, lm.position), axis=1)
+
+            # Create a simple, large covariance to be fixed by the update step
+            self.P = np.concatenate((self.P, np.zeros((2, self.P.shape[1]))), axis=0)
+            self.P = np.concatenate((self.P, np.zeros((self.P.shape[0], 2))), axis=1)
+            self.P[-2,-2] = self.init_lm_cov_true**2
+            self.P[-1,-1] = self.init_lm_cov_true**2
 
     ##########################################
     ##########################################

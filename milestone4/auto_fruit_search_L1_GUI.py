@@ -357,6 +357,8 @@ if __name__ == "__main__":
     quitgame = False
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
+    x_active = False
+    y_active = False
 
     while start:
         # operate.update_keyboard()
@@ -396,6 +398,15 @@ if __name__ == "__main__":
                         print('SLAM is running')
                     else:
                         print('SLAM is paused')
+                        
+                # read in the true map
+                fruits_list, fruits_true_pos, aruco_true_pos = L1.read_true_map('M4_true_map.txt')
+                lms = []
+                for i,lm in enumerate(aruco_true_pos):
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    lms.append(measure_lm)
+                operate.ekf.add_landmarks_init(lms)   
+                operate.output.write_map(operate.ekf)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_q: # reset
                 x_active = False
                 y_active = False

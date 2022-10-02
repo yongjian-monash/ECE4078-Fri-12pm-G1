@@ -8,6 +8,7 @@ import json
 import ast
 import argparse
 import time
+import math
 
 # import SLAM components
 # sys.path.insert(0, "{}/slam".format(os.getcwd()))
@@ -22,8 +23,9 @@ import measure as measure
 
 # custom
 from operate import Operate
-import pygame
-
+from tkinter import *
+import matplotlib.pyplot as plt
+plt.switch_backend('TkAgg')
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 3 types of target fruit to search
@@ -143,11 +145,11 @@ def drive_to_point(waypoint, robot_pose, operate):
     print("Turning for {:.2f} seconds".format(turn_time))
     
     if turn_diff > 0: # turn left
-        lv, rv = ppi.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+        lv, rv = operate.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
         turn_drive_meas = measure.Drive(lv, rv, turn_time)
         operate.update_slam(turn_drive_meas)
     elif turn_diff < 0: # turn right
-        lv, rv = ppi.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
+        lv, rv = operate.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
         turn_drive_meas = measure.Drive(lv, rv, turn_time)
         operate.update_slam(turn_drive_meas)
     # print(operate.ekf.robot.state)
@@ -160,8 +162,9 @@ def drive_to_point(waypoint, robot_pose, operate):
     drive_time = pos_diff/(scale*wheel_vel)
     print("Driving for {:.2f} seconds".format(drive_time))
     
-    lv, rv = ppi.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
+    lv, rv = operate.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
     lin_drive_meas = measure.Drive(lv, rv, drive_time)
+    print(lin_drive_meas)
     operate.update_slam(lin_drive_meas)
     # print(operate.ekf.robot.state)
     ####################################################
@@ -181,6 +184,9 @@ def get_robot_pose(operate):
 
     return robot_pose
 
+def round_nearest(x, a):
+    return round(round(x / a) * a, -int(math.floor(math.log10(a))))
+    
 # main loop
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Fruit searching")
@@ -199,42 +205,48 @@ if __name__ == "__main__":
     fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
     search_list = read_search_list()
     print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
+    
+    # plot for directing robot
+    fruit_names = ['redapple', 'greenapple', 'orange', 'mango', 'capsicum']
+    fruit_color = [[128, 0, 0], [155, 255, 70], [255, 85, 0], [255, 180, 0], [0, 128, 0]]
+    px = []
+    py = []
+    color = []
+    
+    for i in range(len(fruit_color)):
+        for j in range(3):
+            fruit_color[i][j] /= 255
+            
+    space = np.arange(-1.6, 1.61, 0.2)
+    fig = plt.figure(figsize=(6,6))
+    plt.plot(0,0,'rx')
+    
+    for i in range(len(aruco_true_pos)):
+        plt.scatter(aruco_true_pos[i][0], aruco_true_pos[i][1], color='C0')
+        plt.text(aruco_true_pos[i][0]+0.05, aruco_true_pos[i][1]+0.05, i+1, color='C0', size=12)
+        px.append(aruco_true_pos[i][0])
+        py.append(aruco_true_pos[i][1])
+        color.append('C0')
+        
+    for i in range(len(fruits_true_pos)):
+        index = fruit_names.index(fruits_list[i])
+        plt.scatter(fruits_true_pos[i][0], fruits_true_pos[i][1], color=fruit_color[index])
+        plt.text(fruits_true_pos[i][0]+0.05, fruits_true_pos[i][1]+0.05, i+1+10, color=fruit_color[index], size=12)
+        px.append(fruits_true_pos[i][0])
+        py.append(fruits_true_pos[i][1])
+        color.append(fruit_color[index])
+        
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.xticks(space)
+    plt.yticks(space)
+    plt.grid()
+    plt.show()
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
     
     # custom
-    pygame.font.init() 
-    TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
-    TEXT_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 40)
-    
-    width, height = 700, 660
-    canvas = pygame.display.set_mode((width, height))
-    pygame.display.set_caption('ECE4078 2021 Lab')
-    pygame.display.set_icon(pygame.image.load('pics/8bit/pibot5.png'))
-    canvas.fill((0, 0, 0))
-    splash = pygame.image.load('pics/loading.png')
-    pibot_animate = [pygame.image.load('pics/8bit/pibot1.png'),
-                     pygame.image.load('pics/8bit/pibot2.png'),
-                     pygame.image.load('pics/8bit/pibot3.png'),
-                    pygame.image.load('pics/8bit/pibot4.png'),
-                     pygame.image.load('pics/8bit/pibot5.png')]
-    pygame.display.update()
-
-    start = False
-
-    counter = 40
-    while not start:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                start = True
-        canvas.blit(splash, (0, 0))
-        x_ = min(counter, 600)
-        if x_ < 600:
-            canvas.blit(pibot_animate[counter%10//2], (x_, 565))
-            pygame.display.update()
-            counter += 2
-
     operate = Operate(args)
     n_observed_markers = len(operate.ekf.taglist)
     if n_observed_markers == 0:
@@ -253,86 +265,31 @@ if __name__ == "__main__":
             print('SLAM is running')
         else:
             print('SLAM is paused')
-
-    # The following code is only a skeleton code the semi-auto fruit searching task
-    while start:
-        operate.take_pic()
-        operate.draw(canvas)
-        pygame.display.update()
+            
+    test = 0.0
+    
+    # while True:
+        # coord = plt.ginput()
+        # x = round_nearest(coord[0][0], 0.2)
+        # y = round_nearest(coord[0][1], 0.2)
         
-        lv, rv = ppi.set_velocity([0, 0], tick=0.0, time=0.0)
-        drive_meas = measure.Drive(lv, rv, 0.0)
-        operate.update_slam(drive_meas)
-
-        # enter the waypoints
-        # instead of manually enter waypoints in command line, you can get coordinates by clicking on a map (GUI input), see camera_calibration.py
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.quit = True
-            elif event.type == pygame.KEYDOWN and event.key == pygame.q:
-                x_active = False
-                y_active = False
-                x = ""
-                y = ""
-                operate.notification=""
-            elif event.type == pygame.KEYDOWN and event.key == pygame.w:
-                x_active = True
-                x = ""
-                y = ""
-            elif event.type == pygame.KEYDOWN and x_active:
-                if event.key == pygame.K_RETURN:
-                    x_active = False
-                    y_active = True
-                    
-                    try:
-                        x = float(x)
-                    except ValueError:
-                        operate.notification="Please enter a number."
-                        x_active = False
-                        y_active = False
-                elif event.key == pygame.K_BACKSPACE:
-                    x =  x[:-1]
-                else:
-                    x += event.unicode
-                    operate.notification = f"Waypoint X: {x}, Waypoint Y: {y}"
-            elif event.type == pygame.KEYDOWN and y_active:
-                if event.key == pygame.K_RETURN:
-                    y_active = False
-                    
-                    try:
-                        y = float(y)
-                        drive_flag = 1
-                    except ValueError:
-                        operate.notification="Please enter a number."
-                        x_active = False
-                        y_active = False
-                        
-                    if drive_flag:
-                        # estimate the robot's pose
-                        robot_pose = get_robot_pose(operate)
-
-                        # robot drives to the waypoint
-                        waypoint = [x,y]
-                        drive_to_point(waypoint,robot_pose,operate)
-                        robot_pose = get_robot_pose(operate)
-                        print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
-                        drive_flag = 0
-                elif event.key == pygame.K_BACKSPACE:
-                    y =  y[:-1]
-                else:
-                    y += event.unicode
-                    operate.notification = f"Waypoint X: {x}, Waypoint Y: {y}"
+        # new_x = 0.2
+        # new_y = 0.2
+        # px.append(x)
+        # py.append(y)
+        # color.append('red')
+        # plt.scatter(new_x, new_y, color='C0')
         
-        if self.quit:
-            pygame.quit()
-            sys.exit()
-                    
-        # lv, rv = ppi.set_velocity([0, 0], tick=0.0, time=0.0)
+        # # estimate the robot's pose
+        # robot_pose = get_robot_pose(operate)
+
+        # # robot drives to the waypoint
+        # waypoint = [x,y]
+        # drive_to_point(waypoint,robot_pose,operate)
+        # robot_pose = get_robot_pose(operate)
+        # print("Finished driving to waypoint: {}; New robot pose: {}".format(waypoint,robot_pose))
+        
+        # # custom
+        # lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
         # drive_meas = measure.Drive(lv, rv, 0.0)
         # operate.update_slam(drive_meas)
-        
-        # # exit
-        # ppi.set_velocity([0, 0])
-        # uInput = input("Add a new waypoint? [Y/N]")
-        # if uInput == 'N':
-            # break
