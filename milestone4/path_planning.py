@@ -474,6 +474,8 @@ class GenerateCoord:
         self.spoofed_obs_y = []
 
         for i in spoofed_obs:
+            self.spoofed_obs_x.append(int(i[0] * 10))
+            self.spoofed_obs_y.append(int(i[1] * 10))
             for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 1 + 1):
                 self.spoofed_obs_x.append(j)
                 self.spoofed_obs_y.append(int(i[1] * 10) - 1)

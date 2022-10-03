@@ -103,14 +103,14 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
         d = focal_length * true_height/box[3][0]
         
         # more accurate estimation
-        # u_0 = camera_matrix[0][2]
-        # theta_f = np.arctan((box[0][0] - u_0)/focal_length)
-        # target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0] + theta_f)
-        # target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0] + theta_f)
+        u_0 = camera_matrix[0][2]
+        theta_f = np.arctan((box[0][0] - u_0)/focal_length)
+        target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0] + theta_f)
+        target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0] + theta_f)
         
-        # assume fruit is always in x center of image
-        target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0])
-        target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0])
+        # # assume fruit is always in x center of image
+        # target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0])
+        # target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0])
         
         target_pose_dict[target_list[target_num-1]] = target_pose
         ###########################################
@@ -174,6 +174,29 @@ def merge_estimations(target_map):
             pass
     ###########################################
         
+    return target_est
+    
+def live_fruit_pose():
+    fileK = "{}intrinsic.txt".format('./calibration/param/')
+    camera_matrix = np.loadtxt(fileK, delimiter=',')
+    base_dir = Path('./')
+    
+    # a dictionary of all the saved detector outputs
+    image_poses = {}
+    with open(base_dir/'lab_output/images.txt') as fp:
+        for line in fp.readlines():
+            pose_dict = ast.literal_eval(line)
+            image_poses[pose_dict['imgfname']] = pose_dict['pose']
+            
+    # estimate pose of targets in each detector output
+    target_map = {}        
+    for file_path in image_poses.keys():
+        completed_img_dict = get_image_info(base_dir, file_path, image_poses)
+        target_map[file_path] = estimate_pose(base_dir, camera_matrix, completed_img_dict)
+        
+    # merge the estimations of the targets so that there are only one estimate for each target type
+    target_est = merge_estimations(target_map)
+    
     return target_est
 
 

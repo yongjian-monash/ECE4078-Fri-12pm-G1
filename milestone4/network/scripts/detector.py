@@ -73,7 +73,7 @@ class Detector:
             cv2.rectangle(pred, p1, p2, obj_class+1, -1)
         #########################################################################
         
-        colour_map = self.visualise_output(pred)
+        # colour_map = self.visualise_output(pred)
         
         return pred, bbox_img # original yolov5 output
         # return pred, colour_map
