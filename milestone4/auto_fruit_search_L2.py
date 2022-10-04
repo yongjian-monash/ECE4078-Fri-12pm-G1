@@ -147,20 +147,26 @@ def drive_to_point(waypoint, robot_pose, operate):
     if turn_diff > 0.0: # turn left
         lv, rv = operate.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
         turn_drive_meas = measure.Drive(lv, rv, turn_time)
+        
+        time.sleep(0.5)
+        operate.take_pic()
         operate.update_slam(turn_drive_meas)
     elif turn_diff < 0.0: # turn right
         lv, rv = operate.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
         turn_drive_meas = measure.Drive(lv, rv, turn_time)
+        
+        time.sleep(0.5)
+        operate.take_pic()
         operate.update_slam(turn_drive_meas)
     # print(operate.ekf.robot.state)
     
     # time.sleep(0.2)
     
     # take latest pic and update slam
-    for _ in range(3):
-        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
-        drive_meas = measure.Drive(lv, rv, 0.0)
-        operate.update_slam(drive_meas)
+    # for _ in range(3):
+        # lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        # drive_meas = measure.Drive(lv, rv, 0.0)
+        # operate.update_slam(drive_meas)
         
     # # update pygame display
     # operate.draw(canvas)
@@ -177,16 +183,19 @@ def drive_to_point(waypoint, robot_pose, operate):
     if pos_diff > 0.0:
         lv, rv = operate.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
         lin_drive_meas = measure.Drive(lv, rv, drive_time)
+        
+        time.sleep(0.5)
+        operate.take_pic()
         operate.update_slam(lin_drive_meas)
     # print(operate.ekf.robot.state)
     
     # time.sleep(0.2)
     
     # take latest pic and update slam
-    for _ in range(3):
-        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
-        drive_meas = measure.Drive(lv, rv, 0.0)
-        operate.update_slam(drive_meas)
+    # for _ in range(3):
+        # lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        # drive_meas = measure.Drive(lv, rv, 0.0)
+        # operate.update_slam(drive_meas)
         
     # # update pygame display
     # operate.draw(canvas)
