@@ -160,11 +160,14 @@ def generate_obstacles(fruit_true_pos, aruco_true_pos):
     return ox, oy
     
 
-def generate_points(self, fruit_pos, aruco_true_pos, spoofed_obs, operate):
+def generate_points(fruit_pos, aruco_true_pos, spoofed_obs, operate):
     sx = 0.0
     sy = 0.0
     new_goal = 0.0
     face_angle = 0.0
+    # robot_pose = operate.ekf.robot.state.squeeze().tolist()
+    # sx = robot_pose[0]
+    # sy = robot_pose[1]
 
     # start and goal position
     possible_goal = []
@@ -196,7 +199,7 @@ def generate_points(self, fruit_pos, aruco_true_pos, spoofed_obs, operate):
         if dis < min_val:
             min_val = dis
             new_goal = possible_goal[j]
-            face_angle[i] = possible_angle[j]
+            face_angle = possible_angle[j]
     
     sx = int(sx * 10)
     sy = int(sy * 10)
@@ -433,10 +436,16 @@ if __name__ == "__main__":
     operate.ekf.add_landmarks_init(lms)   
     operate.output.write_map(operate.ekf)
     
-    
-    
-    
-    generate_path_L2()
+    print(goals)
+    for goal in goals:
+        sx, sy, gx, gy, face_angle = generate_points(goal, aruco_true_pos, [], None)
+        dstarlite.main(Node(x=sx, y=sy), Node(x=gx, y=gy),spoofed_ox=[], spoofed_oy=[])
+        print(sx/10.0)
+        print(sy/10.0)
+        print(gx/10.0)
+        print(gy/10.0)
+
+    # generate_path_L2()
     
     # print(waypoints_list2)
     
