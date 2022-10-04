@@ -40,7 +40,7 @@ class EKF:
         self.taglist = []
         # Covariance matrix
         self.P = np.zeros((3,3))
-        self.init_lm_cov = 1e-5
+        self.init_lm_cov = 1e3
         self.robot_init_state = None
 
     def number_landmarks(self):

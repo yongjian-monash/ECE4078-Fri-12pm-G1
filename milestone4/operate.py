@@ -245,71 +245,69 @@ class Operate:
     # keyboard teleoperation        
     def update_keyboard(self):
         for event in pygame.event.get():
-            # if event.type == pygame.KEYDOWN and event.key == pygame.a:
-                # self.command['motion'] = [2, 0] # start driving
-            # # drive forward
-            # if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                # self.command['motion'] = [2, 0]
-            # # drive backward
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                # self.command['motion'] = [-2, 0] 
-            # # turn left
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                # self.command['motion'] = [0, 2] 
-            # # drive right
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                # self.command['motion'] = [0, -2] 
-            # # stop
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                # self.command['motion'] = [0, 0]
-            # # save image
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
-                # self.command['save_image'] = True
-            # # save SLAM map
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                # self.command['output'] = True
-            # # reset SLAM map
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                # if self.double_reset_comfirm == 0:
-                    # self.notification = 'Press again to confirm CLEAR MAP'
-                    # self.double_reset_comfirm +=1
-                # elif self.double_reset_comfirm == 1:
-                    # self.notification = 'SLAM Map is cleared'
-                    # self.double_reset_comfirm = 0
-                    # self.ekf.reset()
-            # # run SLAM
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                # n_observed_markers = len(self.ekf.taglist)
-                # if n_observed_markers == 0:
-                    # if not self.ekf_on:
-                        # self.notification = 'SLAM is running'
-                        # self.ekf_on = True
-                    # else:
-                        # self.notification = '> 2 landmarks is required for pausing'
-                # elif n_observed_markers < 3:
-                    # self.notification = '> 2 landmarks is required for pausing'
-                # else:
-                    # if not self.ekf_on:
-                        # self.request_recover_robot = True
-                    # self.ekf_on = not self.ekf_on
-                    # if self.ekf_on:
-                        # self.notification = 'SLAM is running'
-                    # else:
-                        # self.notification = 'SLAM is paused'
-            # # run object detector
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                # self.command['inference'] = True
-            # # save object detection outputs
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_n:
-                # self.command['save_inference'] = True
-            # # quit
-            # elif event.type == pygame.QUIT:
-                # self.quit = True
+            # drive forward
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                self.command['motion'] = [2, 0]
+            # drive backward
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                self.command['motion'] = [-2, 0] 
+            # turn left
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                self.command['motion'] = [0, 2] 
+            # drive right
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                self.command['motion'] = [0, -2] 
+            # stop
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.command['motion'] = [0, 0]
+            # save image
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
+                self.command['save_image'] = True
+            # save SLAM map
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                self.command['output'] = True
+            # reset SLAM map
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                if self.double_reset_comfirm == 0:
+                    self.notification = 'Press again to confirm CLEAR MAP'
+                    self.double_reset_comfirm +=1
+                elif self.double_reset_comfirm == 1:
+                    self.notification = 'SLAM Map is cleared'
+                    self.double_reset_comfirm = 0
+                    self.ekf.reset()
+            # run SLAM
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                n_observed_markers = len(self.ekf.taglist)
+                if n_observed_markers == 0:
+                    if not self.ekf_on:
+                        self.notification = 'SLAM is running'
+                        self.ekf_on = True
+                    else:
+                        self.notification = '> 2 landmarks is required for pausing'
+                elif n_observed_markers < 3:
+                    self.notification = '> 2 landmarks is required for pausing'
+                else:
+                    if not self.ekf_on:
+                        self.request_recover_robot = True
+                    self.ekf_on = not self.ekf_on
+                    if self.ekf_on:
+                        self.notification = 'SLAM is running'
+                    else:
+                        self.notification = 'SLAM is paused'
+            # run object detector
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                self.command['inference'] = True
+            # save object detection outputs
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_n:
+                self.command['save_inference'] = True
+            # quit
+            elif event.type == pygame.QUIT:
+                self.quit = True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
-            # # output RMSE during run
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
-                # self.command['output2'] = True
+            # output RMSE during run
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                self.command['output2'] = True
         if self.quit:
             pygame.quit()
             sys.exit()
@@ -363,14 +361,15 @@ if __name__ == "__main__":
     while start:
         operate.update_keyboard()
         operate.take_pic()
-        # drive_meas = operate.control()
-        # operate.update_slam(drive_meas)
+        drive_meas = operate.control()
+        operate.update_slam(drive_meas)
         # operate.record_data()
         # operate.save_image()
         # operate.detect_target()
         # # visualise
         operate.draw(canvas)
         pygame.display.update()
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
 
 
 
