@@ -26,6 +26,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from path_planning import *
 
+def round_nearest(x, a):
+        return round(round(x / a) * a, -int(math.floor(math.log10(a))))
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 3 types of target fruit to search
@@ -68,7 +70,6 @@ def read_true_map(fname):
 
         return fruit_list, fruit_true_pos, aruco_true_pos
 
-
 def read_search_list():
     """Read the search order of the target fruits
 
@@ -83,7 +84,6 @@ def read_search_list():
 
     return search_list
 
-
 def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     """Print out the target fruits' pos in the search order
 
@@ -94,15 +94,116 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
 
     print("Search order:")
     n_fruit = 1
+    goals = []
     for fruit in search_list:
         for i in range(3):
             if fruit == fruit_list[i]:
-                print('{}) {} at [{}, {}]'.format(n_fruit,
-                                                  fruit,
-                                                  np.round(fruit_true_pos[i][0], 1),
-                                                  np.round(fruit_true_pos[i][1], 1)))
+                fruit_x = np.round(fruit_true_pos[i][0], 1)
+                fruit_y = np.round(fruit_true_pos[i][1], 1)
+                # print('{}) {} at [{}, {}]'.format(n_fruit, fruit, fruit_x, fruit_y))
+                goals.append([fruit_x, fruit_y])
         n_fruit += 1
+    
+    return goals
+    
+def generate_obstacles(fruit_true_pos, aruco_true_pos):
+    ox, oy = [], []
+    
+    # generate obstacles for map boundaries
+    for i in range(-16, 16+1):
+        ox.append(i)
+        oy.append(-16)
+    for i in range(-16, 16+1):
+        ox.append(16)
+        oy.append(i)
+    for i in range(-16, 16+1):
+        ox.append(i)
+        oy.append(16)
+    for i in range(-16, 16+1):
+        ox.append(-16)
+        oy.append(i)
+        
+    # generate obstacles for aruco markers
+    for i in aruco_true_pos:
+        ox.append(int(i[0] * 10))
+        oy.append(int(i[1] * 10))
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) - 1)
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) + 1)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) - 1)
+            oy.append(j)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) + 1)
+            oy.append(j)
+            
+    # generate obstacles for fruits
+    for i in fruit_true_pos:
+        ox.append(int(i[0] * 10))
+        oy.append(int(i[1] * 10))
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) - 1)
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) + 1)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) - 1)
+            oy.append(j)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) + 1)
+            oy.append(j)
+    
+    return ox, oy
+    
 
+def generate_points(self, fruit_pos, aruco_true_pos, spoofed_obs, operate):
+    sx = 0.0
+    sy = 0.0
+    new_goal = 0.0
+    face_angle = 0.0
+
+    # start and goal position
+    possible_goal = []
+    possible_angle = []
+    
+    # start from north, in 8 compass position away from goal
+    d = 0.2 # distance from goal
+    x_list = [-d, -d, 0, d, d, d, 0, -d]
+    y_list = [0, -d, -d, -d, 0, d, d, d]
+    angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+    
+    # # start from north, in 4 compass position away from goal
+    # d = 0.2 # distance from goal
+    # x_list = [-d, 0, d, 0]
+    # y_list = [0, -d, 0, d]
+    # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
+    
+    for k in range(len(x_list)):
+        x = round_nearest(fruit_pos[0] + x_list[k], 0.2)
+        y = round_nearest(fruit_pos[1] + y_list[k], 0.2)
+        
+        if not (np.array([x, y]) == aruco_true_pos).all(1).any() and (not ((np.array([x, y]) == spoofed_obs).all(1).any()) if len(spoofed_obs) != 0 else True):
+            possible_goal.append(np.array([x, y]))
+            possible_angle.append(angle_list[k])
+
+    min_val = 10000
+    for j in range(len(possible_goal)):
+        dis = np.hypot(abs(sx - possible_goal[j][0]), abs(sy - possible_goal[j][1]))
+        if dis < min_val:
+            min_val = dis
+            new_goal = possible_goal[j]
+            face_angle[i] = possible_angle[j]
+    
+    sx = int(sx * 10)
+    sy = int(sy * 10)
+    gx = int(new_goal[0] * 10)  # [m]
+    gy = int(new_goal[1] * 10)  # [m]
+
+    return sx, sy, gx, gy, face_angle
 
 # Waypoint navigation
 # the robot automatically drives to a given [x,y] coordinate
@@ -296,11 +397,11 @@ if __name__ == "__main__":
     ppi = Alphabot(args.ip,args.port)
 
     # read in the true map
-    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map(args.map)
+    fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
     search_list = read_search_list()
-    print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
-    
-    print(search_list)
+    goals = print_target_fruits_pos(search_list, fruits_list, fruits_true_pos)
+    ox, oy = generate_obstacles(fruits_true_pos, aruco_true_pos)
+    dstarlite = DStarLite(ox, oy)
 
     waypoint = [0.0,0.0]
     robot_pose = [0.0,0.0,0.0]
@@ -332,10 +433,10 @@ if __name__ == "__main__":
     operate.ekf.add_landmarks_init(lms)   
     operate.output.write_map(operate.ekf)
     
-    # generate_path_L2()
     
-    print(fruits_list)
-    print(search_list)
+    
+    
+    generate_path_L2()
     
     # print(waypoints_list2)
     

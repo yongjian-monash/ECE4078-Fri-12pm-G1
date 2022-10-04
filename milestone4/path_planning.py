@@ -113,8 +113,8 @@ class DStarLite:
 
         # Below is the same as 1; modify if you modify the cost of each move in
         # motion
-        # return max(abs(self.start.x - s.x), abs(self.start.y - s.y))
-        return 1
+        return max(abs(self.start.x - s.x), abs(self.start.y - s.y))
+        # return 1
 
     def calculate_key(self, s: Node):
         return (min(self.g[s.x][s.y], self.rhs[s.x][s.y]) + self.h(s)
