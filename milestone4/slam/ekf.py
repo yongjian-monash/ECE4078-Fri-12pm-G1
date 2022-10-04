@@ -21,7 +21,7 @@ class EKF:
 
         # Covariance matrix
         self.P = np.zeros((3,3))
-        self.init_lm_cov = 1e3
+        self.init_lm_cov = 1e-5
         self.robot_init_state = None
         self.lm_pics = []
         for i in range(1, 11):
@@ -40,7 +40,7 @@ class EKF:
         self.taglist = []
         # Covariance matrix
         self.P = np.zeros((3,3))
-        self.init_lm_cov = 1e3
+        self.init_lm_cov = 1e-5
         self.robot_init_state = None
 
     def number_landmarks(self):
@@ -164,8 +164,8 @@ class EKF:
             # Create a simple, large covariance to be fixed by the update step
             self.P = np.concatenate((self.P, np.zeros((2, self.P.shape[1]))), axis=0)
             self.P = np.concatenate((self.P, np.zeros((self.P.shape[0], 2))), axis=1)
-            self.P[-2,-2] = self.init_lm_cov**2
-            self.P[-1,-1] = self.init_lm_cov**2
+            self.P[-2,-2] = self.init_lm_cov**2 
+            self.P[-1,-1] = self.init_lm_cov**2 
             
     def add_landmarks_init(self, measurements): # add true landmark position
         if not measurements:
@@ -183,8 +183,10 @@ class EKF:
             # Create a simple, large covariance to be fixed by the update step
             self.P = np.concatenate((self.P, np.zeros((2, self.P.shape[1]))), axis=0)
             self.P = np.concatenate((self.P, np.zeros((self.P.shape[0], 2))), axis=1)
-            self.P[-2,-2] = self.init_lm_cov_true**2
-            self.P[-1,-1] = self.init_lm_cov_true**2
+            #self.P[-2,-2] = self.init_lm_cov_true**2
+            self.P[-2,-2] = self.init_lm_cov**2  #try
+            #self.P[-1,-1] = self.init_lm_cov_true**2
+            self.P[-1,-1] = self.init_lm_cov**2  #try
 
     ##########################################
     ##########################################

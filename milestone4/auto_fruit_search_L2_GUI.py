@@ -71,7 +71,7 @@ class Operate:
         self.image_id = 0
         self.notification = 'Press ENTER to start SLAM'
         # a 5min timer
-        self.count_down = 300
+        self.count_down = 600
         self.start_time = time.time()
         self.control_clock = time.time()
         # initialise images
@@ -385,7 +385,7 @@ class Operate:
                 fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
                 
@@ -406,7 +406,7 @@ class Operate:
                 fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
                 
