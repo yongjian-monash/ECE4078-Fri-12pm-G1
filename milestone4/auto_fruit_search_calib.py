@@ -139,18 +139,21 @@ def drive_to_point(waypoint, robot_pose, operate, turn_diff = 0, pos_diff = 0):
     
     # turn towards the waypoint
     turn_time = 0.0 # replace with your calculation
-    turn_time = (abs(turn_diff)*baseline)/(2.0*scale*wheel_vel) # replace with your calculation
-    print("Turning for {:.2f} seconds".format(turn_time))
     
     if turn_diff > 0: # turn left
+        turn_time = (abs(turn_diff)*baseline)/(2.0*scale*wheel_vel)
         lv, rv = operate.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
         # turn_drive_meas = measure.Drive(lv, rv, turn_time)
         # operate.update_slam(turn_drive_meas)
+        
     elif turn_diff < 0: # turn right
+        turn_time = (abs(turn_diff)*baseline*1.08)/(2.0*scale*wheel_vel)
         lv, rv = operate.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
         # turn_drive_meas = measure.Drive(lv, rv, turn_time)
         # operate.update_slam(turn_drive_meas)
     # print(operate.ekf.robot.state)
+    print("Turning for {:.2f} seconds".format(turn_time))
+    
     
     # compute driving distance to waypoint
     # pos_diff = np.hypot(x_diff, y_diff)
@@ -169,6 +172,30 @@ def drive_to_point(waypoint, robot_pose, operate, turn_diff = 0, pos_diff = 0):
     ####################################################
 
     print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+    
+# rotate robot to scan landmarks
+def rotate_robot(operate, num_turns=8):
+    # imports camera / wheel calibration parameters 
+    fileS = "calibration/param/scale.txt"
+    scale = np.loadtxt(fileS, delimiter=',')
+    fileB = "calibration/param/baseline.txt"
+    baseline = np.loadtxt(fileB, delimiter=',')
+    
+    wheel_vel = 20 # tick to move the robot
+    
+    turn_resolution = 2*np.pi/num_turns
+    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel)
+    print(turn_time)
+    
+    
+    for _ in range(num_turns):
+        
+        lv, rv = operate.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+        turn_drive_meas = measure.Drive(lv, rv, turn_time)
+        
+        time.sleep(0.2)
+        operate.take_pic()
+        operate.update_slam(turn_drive_meas)
 
 
 def get_robot_pose(operate):
@@ -233,6 +260,16 @@ if __name__ == "__main__":
         lms.append(measure_lm)
     operate.ekf.add_landmarks_init(lms)   
     operate.output.write_map(operate.ekf)
+    
+    # while True:
+        # turn_diff = input("Turning angle: ")
+        # try:
+            # turn_diff = int(turn_diff)
+        # except ValueError:
+            # print("Please enter a number.")
+            # continue
+            
+        # rotate_robot(operate, turn_diff)
 
     # The following code is only a skeleton code the semi-auto fruit searching task
     while True:

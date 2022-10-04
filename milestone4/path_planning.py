@@ -26,7 +26,6 @@ class Node:
         self.y = y
         self.cost = cost
 
-
 def add_coordinates(node1: Node, node2: Node):
     new_node = Node()
     new_node.x = node1.x + node2.x
@@ -34,10 +33,8 @@ def add_coordinates(node1: Node, node2: Node):
     new_node.cost = node1.cost + node2.cost
     return new_node
 
-
 def compare_coordinates(node1: Node, node2: Node):
     return node1.x == node2.x and node1.y == node2.y
-
 
 class DStarLite:
 
@@ -323,6 +320,196 @@ class DStarLite:
         print("Path found")
         return True, pathx, pathy
 
+
+def round_nearest(x, a):
+    return round(round(x / a) * a, -int(math.floor(math.log10(a))))
+        
+def generate_obstacles(fruit_true_pos, aruco_true_pos):
+    ox, oy = [], []
+    
+    # generate obstacles for map boundaries
+    for i in range(-16, 16+1):
+        ox.append(i)
+        oy.append(-16)
+    for i in range(-16, 16+1):
+        ox.append(16)
+        oy.append(i)
+    for i in range(-16, 16+1):
+        ox.append(i)
+        oy.append(16)
+    for i in range(-16, 16+1):
+        ox.append(-16)
+        oy.append(i)
+        
+    # generate obstacles for aruco markers
+    for i in aruco_true_pos:
+        ox.append(int(i[0] * 10))
+        oy.append(int(i[1] * 10))
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) - 1)
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) + 1)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) - 1)
+            oy.append(j)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) + 1)
+            oy.append(j)
+            
+    # generate obstacles for fruits
+    for i in fruit_true_pos:
+        ox.append(int(i[0] * 10))
+        oy.append(int(i[1] * 10))
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) - 1)
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            ox.append(j)
+            oy.append(int(i[1] * 10) + 1)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) - 1)
+            oy.append(j)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            ox.append(int(i[0] * 10) + 1)
+            oy.append(j)
+    
+    return ox, oy
+
+def generate_points_L2(fruit_goals, aruco_true_pos):
+    sx = np.array([0])
+    sy = np.array([0])
+    new_goal = np.zeros(fruit_goals.shape)
+    face_angle = np.zeros(len(fruit_goals))
+
+    # start and goal position
+    for i in range(len(fruit_goals)):
+        possible_goal = []
+        possible_angle = []
+        
+        # start from north, in 8 compass position away from goal
+        d = 0.2 # distance from goal
+        x_list = [-d, -d, 0, d, d, d, 0, -d]
+        y_list = [0, -d, -d, -d, 0, d, d, d]
+        angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+        
+        # # start from north, in 4 compass position away from goal
+        # d = 0.2 # distance from goal
+        # x_list = [-d, 0, d, 0]
+        # y_list = [0, -d, 0, d]
+        # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
+        
+        for k in range(len(x_list)):
+            x = round_nearest(fruit_goals[i][0] + x_list[k], 0.2)
+            y = round_nearest(fruit_goals[i][1] + y_list[k], 0.2)
+            
+            if not (np.array([x, y]) == aruco_true_pos).all(1).any():
+                possible_goal.append(np.array([x, y]))
+                possible_angle.append(angle_list[k])
+
+        min_val = 10000
+        for j in range(len(possible_goal)):
+            dis = np.hypot(abs(sx[i] - possible_goal[j][0]), abs(sy[i] - possible_goal[j][1]))
+            if dis < min_val:
+                min_val = dis
+                new_goal[i] = possible_goal[j]
+                face_angle[i] = possible_angle[j]
+        sx = np.append(sx, new_goal[i][0])
+        sy = np.append(sy, new_goal[i][1])
+    sx = (sx * 10).astype(int)
+    sy = (sy * 10).astype(int)
+    sx = np.delete(sx, -1)
+    sy = np.delete(sy, -1)
+
+    gx = (new_goal * 10).astype(int)[:, 0]  # [m]
+    gy = (new_goal * 10).astype(int)[:, 1]  # [m]
+    fx = (fruit_goals * 10).astype(int)[:, 0]
+    fy = (fruit_goals * 10).astype(int)[:, 1]
+    
+    return sx, sy, gx, gy, fx, fy, face_angle
+
+def read_true_map(fname):
+    """Read the ground truth map and output the pose of the ArUco markers and 3 types of target fruit to search
+
+    @param fname: filename of the map
+    @return:
+        1) list of target fruits, e.g. ['redapple', 'greenapple', 'orange']
+        2) locations of the target fruits, [[x1, y1], ..... [xn, yn]]
+        3) locations of ArUco markers in order, i.e. pos[9, :] = position of the aruco10_0 marker
+    """
+    with open(fname, 'r') as f:
+        try:
+            gt_dict = json.load(f)                   
+        except ValueError as e:
+            with open(fname, 'r') as f:
+                gt_dict = ast.literal_eval(f.readline())   
+        fruit_list = []
+        fruit_true_pos = []
+        aruco_true_pos = np.empty([10, 2])
+
+        # remove unique id of targets of the same type
+        for key in gt_dict:
+            x = np.round(gt_dict[key]['x'], 1)
+            y = np.round(gt_dict[key]['y'], 1)
+
+            if key.startswith('aruco'):
+                if key.startswith('aruco10'):
+                    aruco_true_pos[9][0] = x
+                    aruco_true_pos[9][1] = y
+                else:
+                    marker_id = int(key[5])
+                    aruco_true_pos[marker_id-1][0] = x
+                    aruco_true_pos[marker_id-1][1] = y
+            else:
+                fruit_list.append(key[:-2])
+                if len(fruit_true_pos) == 0:
+                    fruit_true_pos = np.array([[x, y]])
+                else:
+                    fruit_true_pos = np.append(fruit_true_pos, [[x, y]], axis=0)
+
+        return fruit_list, fruit_true_pos, aruco_true_pos
+
+def read_search_list():
+    """Read the search order of the target fruits
+
+    @return: search order of the target fruits
+    """
+    search_list = []
+    with open('search_list.txt', 'r') as fd:
+        fruits = fd.readlines()
+
+        for fruit in fruits:
+            search_list.append(fruit.strip())
+
+    return search_list
+
+def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
+    """Print out the target fruits' pos in the search order
+
+    @param search_list: search order of the fruits
+    @param fruit_list: list of target fruits
+    @param fruit_true_pos: positions of the target fruits
+    """
+
+    print("Search order:")
+    n_fruit = 1
+    fruit_goals = []
+    for fruit in search_list:
+        for i in range(3):
+            if fruit == fruit_list[i]:
+                x = np.round(fruit_true_pos[i][0], 1)
+                y = np.round(fruit_true_pos[i][1], 1)
+                print('{}) {} at [{}, {}]'.format(n_fruit, fruit, x, y))
+                if len(fruit_goals) == 0:
+                    fruit_goals = np.array([[x, y]])
+                else:
+                    fruit_goals = np.append(fruit_goals, [[x, y]], axis=0)
+        n_fruit += 1
+    
+    return fruit_goals
+
+
 class GenerateCoord:
     def __init__(self, fname):
         self.fname = fname
@@ -495,7 +682,7 @@ class GenerateCoord:
 
         return spoofed_ox, spoofed_oy
         
-def main():
+def animation():
     gen_cor = GenerateCoord('M4_true_map.txt')
     fruit_list, _, _ = gen_cor.read_true_map()
     obs_fruit_list = []
@@ -621,9 +808,59 @@ def ori():
     dstarlite.main(Node(x=sx, y=sy), Node(x=gx, y=gy),
                    spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
                    
+def new_main():
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    search_list = read_search_list()
+    fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
+    
+    ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
+    dstarlite = DStarLite(ox, oy)
+    
+    sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
+    
+    if show_animation:
+        plt.figure(figsize=(4.8,4.8))
+        plt.plot(ox, oy, ".k")
+        plt.plot(sx, sy, "og")
+        plt.plot(gx, gy, "xb")
+        plt.plot(fx, fy, ".r")
+        plt.grid(True)
+        plt.axis("equal")
+        label_column = ['Start', 'Goal', 'Fruits', 'Path taken',
+                        'Current computed path', 'Previous computed path',
+                        'Obstacles']
+        columns = [plt.plot([], [], symbol, color=colour, alpha=alpha)[0]
+                   for symbol, colour, alpha in [['o', 'g', 1],
+                                                 ['x', 'b', 1],
+                                                 ['.', 'r', 1],
+                                                 ['-', 'r', 1],
+                                                 ['.', 'c', 1],
+                                                 ['.', 'c', 0.3],
+                                                 ['.', 'k', 1]]]
+        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:", fontsize="xx-small")
+        plt.plot()
+        plt.xlim(-20, 20)
+        plt.ylim(-20, 20)
+        plt.xticks(np.arange(-20, 21, 4))
+        plt.yticks(np.arange(-20, 21, 4))
+        # plt.show()
+        plt.pause(pause_time)
+        
+        
+    
+    waypoints_list = []
+    for i in range(len(sx)):
+        _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[], spoofed_oy=[])
+        pathx.pop(0)
+        pathy.pop(0)
+        temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+        waypoints_list.append(temp)
+    print(waypoints_list)
+        
+    plt.show()
 
 if __name__ == "__main__":
     show_animation = True
     pause_time = 0.1
     p_create_random_obstacle = 0
-    main()
+    new_main()
