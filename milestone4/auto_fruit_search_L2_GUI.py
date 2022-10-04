@@ -94,18 +94,18 @@ class Operate:
         self.waypoints_list = []
 
     # # wheel control
-    # def control(self):       
-        # if args.play_data:
-            # lv, rv = self.pibot.set_velocity()            
-        # else:
-            # lv, rv = self.pibot.set_velocity(
-                # self.command['motion'])
-        # if not self.data is None:
-            # self.data.write_keyboard(lv, rv)
-        # dt = time.time() - self.control_clock
-        # drive_meas = measure.Drive(lv, rv, dt)
-        # self.control_clock = time.time()
-        # return drive_meas
+    def control(self):       
+        if args.play_data:
+            lv, rv = self.pibot.set_velocity()            
+        else:
+            lv, rv = self.pibot.set_velocity(
+                self.command['motion'])
+        if not self.data is None:
+            self.data.write_keyboard(lv, rv)
+        dt = time.time() - self.control_clock
+        drive_meas = measure.Drive(lv, rv, dt)
+        self.control_clock = time.time()
+        return drive_meas
         
     # camera control
     def take_pic(self):
@@ -472,8 +472,11 @@ if __name__ == "__main__":
         
         # take latest pic and update slam
         operate.take_pic()
-        lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
-        drive_meas = measure.Drive(lv, rv, 0.0)
+        # lv, rv = operate.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+        # drive_meas = measure.Drive(lv, rv, 0.0)
+        # operate.update_slam(drive_meas)
+
+        drive_meas = operate.control()
         operate.update_slam(drive_meas)
         
         # update pygame display
@@ -482,5 +485,6 @@ if __name__ == "__main__":
         
         # perform fruit search
         operate.auto_fruit_search()
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
         
 
