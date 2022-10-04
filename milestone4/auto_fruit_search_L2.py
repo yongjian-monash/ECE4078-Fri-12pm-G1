@@ -332,12 +332,9 @@ if __name__ == "__main__":
     operate.ekf.add_landmarks_init(lms)   
     operate.output.write_map(operate.ekf)
     
-    # generate_path_L2()
+    generate_path_L2()
     
-    print(fruits_list)
-    print(search_list)
-    
-    # print(waypoints_list2)
+    print(waypoints_list2)
     
     # while True:
         # if any(waypoints_list2):
