@@ -386,20 +386,20 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
-            waypoint_update(5)
+            self.waypoint_update(10)
 
         elif turn_diff < 0.0: # turn right
-            turn_time = (abs(turn_diff)*baseline*1.08)/(2.0*scale*wheel_vel)
+            turn_time = (abs(turn_diff)*baseline*1.06)/(2.0*scale*wheel_vel)
             lv, rv = self.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
-            waypoint_update(5)
+            self.waypoint_update(10)
             
         print("Turning for {:.2f} seconds".format(turn_time))
         print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
@@ -419,10 +419,10 @@ class Operate:
             lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
             lin_drive_meas = measure.Drive(lv, rv, drive_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(lin_drive_meas)
-            waypoint_update(5)
+            self.waypoint_update(10)
         
         # update pygame display
         self.draw(canvas)
@@ -450,7 +450,7 @@ class Operate:
         wheel_vel = 20 # tick to move the robot
         
         turn_resolution = 2*np.pi/num_turns
-        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel)
+        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
         
         for _ in range(num_turns):
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
@@ -466,6 +466,7 @@ class Operate:
         for event in pygame.event.get():
             # run SLAM
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+
                 n_observed_markers = len(self.ekf.taglist)
                 if n_observed_markers == 0:
                     if not self.ekf_on:
@@ -483,21 +484,23 @@ class Operate:
                         self.notification = 'SLAM is running'
                     else:
                         self.notification = 'SLAM is paused'
-                        
+
                 # read in the true map
                 # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.01*np.eye(2)))
                     lms.append(measure_lm)
-                self.ekf.add_landmarks_init(lms)   
-                
+                self.ekf.add_landmarks_init(lms)  
+
             # run path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
                 self.generate_path()
                 
             # drive to waypoints
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                # if any(self.waypoints_list):
+                #     self.rotate_robot(num_turns=8)
                 self.command['auto_fruit_search'] = True
                     
             # reset path planning algorithm
@@ -509,7 +512,7 @@ class Operate:
                 # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.01*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
                 

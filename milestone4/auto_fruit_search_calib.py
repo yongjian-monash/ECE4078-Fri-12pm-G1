@@ -147,7 +147,7 @@ def drive_to_point(waypoint, robot_pose, operate, turn_diff = 0, pos_diff = 0):
         # operate.update_slam(turn_drive_meas)
         
     elif turn_diff < 0: # turn right
-        turn_time = (abs(turn_diff)*baseline*1.08)/(2.0*scale*wheel_vel)
+        turn_time = (abs(turn_diff)*baseline*1.06)/(2.0*scale*wheel_vel)
         lv, rv = operate.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
         # turn_drive_meas = measure.Drive(lv, rv, turn_time)
         # operate.update_slam(turn_drive_meas)
@@ -184,7 +184,7 @@ def rotate_robot(operate, num_turns=8):
     wheel_vel = 20 # tick to move the robot
     
     turn_resolution = 2*np.pi/num_turns
-    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel)
+    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
     print(turn_time)
     
     
@@ -234,42 +234,42 @@ if __name__ == "__main__":
     
     # custom
     operate = Operate(args)
-    n_observed_markers = len(operate.ekf.taglist)
-    if n_observed_markers == 0:
-        if not operate.ekf_on:
-            print('SLAM is running')
-            operate.ekf_on = True
-        else:
-            print('> 2 landmarks is required for pausing')
-    elif n_observed_markers < 3:
-        print('> 2 landmarks is required for pausing')
-    else:
-        if not operate.ekf_on:
-            operate.request_recover_robot = True
-        operate.ekf_on = not operate.ekf_on
-        if operate.ekf_on:
-            print('SLAM is running')
-        else:
-            print('SLAM is paused')
+    # n_observed_markers = len(operate.ekf.taglist)
+    # if n_observed_markers == 0:
+    #     if not operate.ekf_on:
+    #         print('SLAM is running')
+    #         operate.ekf_on = True
+    #     else:
+    #         print('> 2 landmarks is required for pausing')
+    # elif n_observed_markers < 3:
+    #     print('> 2 landmarks is required for pausing')
+    # else:
+    #     if not operate.ekf_on:
+    #         operate.request_recover_robot = True
+    #     operate.ekf_on = not operate.ekf_on
+    #     if operate.ekf_on:
+    #         print('SLAM is running')
+    #     else:
+    #         print('SLAM is paused')
             
-        lms = []
+    #     lms = []
     
-    lms = []
-    for i,lm in enumerate(aruco_true_pos):
-        measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
-        lms.append(measure_lm)
-    operate.ekf.add_landmarks_init(lms)   
-    operate.output.write_map(operate.ekf)
+    # lms = []
+    # for i,lm in enumerate(aruco_true_pos):
+    #     measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+    #     lms.append(measure_lm)
+    # operate.ekf.add_landmarks_init(lms)   
+    # operate.output.write_map(operate.ekf)
     
     # while True:
-        # turn_diff = input("Turning angle: ")
-        # try:
-            # turn_diff = int(turn_diff)
-        # except ValueError:
-            # print("Please enter a number.")
-            # continue
+    #     turn_diff = input("Turning angle: ")
+    #     try:
+    #         turn_diff = int(turn_diff)
+    #     except ValueError:
+    #         print("Please enter a number.")
+    #         continue
             
-        # rotate_robot(operate, turn_diff)
+    #     rotate_robot(operate, turn_diff)
 
     # The following code is only a skeleton code the semi-auto fruit searching task
     while True:
