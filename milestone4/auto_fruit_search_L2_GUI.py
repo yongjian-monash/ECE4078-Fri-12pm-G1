@@ -446,27 +446,6 @@ class Operate:
             self.take_pic()
             self.update_slam(turn_drive_meas)
             
-    # rotate robot to scan landmarks
-    def rotate_robot(operate, num_turns=8):
-        # imports camera / wheel calibration parameters 
-        fileS = "calibration/param/scale.txt"
-        scale = np.loadtxt(fileS, delimiter=',')
-        fileB = "calibration/param/baseline.txt"
-        baseline = np.loadtxt(fileB, delimiter=',')
-        
-        wheel_vel = 20 # tick to move the robot
-        
-        turn_resolution = 2*np.pi/num_turns
-        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel)
-        
-        for _ in range(num_turns):
-            lv, rv = operate.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
-            turn_drive_meas = measure.Drive(lv, rv, turn_time)
-            
-            time.sleep(0.2)
-            operate.take_pic()
-            operate.update_slam(turn_drive_meas)
-            
     
     # Keyboard control for Milestone 4 Level 2
     def update_keyboard_L2(self):
