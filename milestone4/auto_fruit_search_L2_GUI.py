@@ -522,6 +522,9 @@ class Operate:
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
                 
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                self.command['inference'] = True
+                
             # quit
             elif event.type == pygame.QUIT:
                 self.quit = True
@@ -593,6 +596,9 @@ if __name__ == "__main__":
         # update pygame display
         operate.draw(canvas)
         pygame.display.update()
+        
+        # detector view
+        operate.detect_target()
         
         # perform fruit search
         operate.auto_fruit_search(canvas)
