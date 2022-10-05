@@ -389,7 +389,7 @@ class Operate:
             # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
-            self.waypoint_update(10)
+            self.waypoint_update()
 
         elif turn_diff < 0.0: # turn right
             turn_time = (abs(turn_diff)*baseline*1.06)/(2.0*scale*wheel_vel)
@@ -399,7 +399,7 @@ class Operate:
             # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
-            self.waypoint_update(10)
+            self.waypoint_update()
             
         print("Turning for {:.2f} seconds".format(turn_time))
         print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
@@ -422,7 +422,7 @@ class Operate:
             # time.sleep(0.5)
             self.take_pic()
             self.update_slam(lin_drive_meas)
-            self.waypoint_update(10)
+            self.waypoint_update()
         
         # update pygame display
         self.draw(canvas)
@@ -432,7 +432,7 @@ class Operate:
         print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
         print()
         
-    def waypoint_update(self, steps=5):
+    def waypoint_update(self, steps=7):
         for _ in range(steps):
             self.take_pic()
             lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
@@ -456,9 +456,15 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.2)
+            # time.sleep(0.2)
             self.take_pic()
             self.update_slam(turn_drive_meas)
+
+            self.waypoint_update()
+            # update pygame display
+            self.draw(canvas)
+
+            pygame.display.update()
             
     
     # Keyboard control for Milestone 4 Level 2
@@ -489,7 +495,7 @@ class Operate:
                 # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.01*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)  
 
@@ -500,7 +506,7 @@ class Operate:
             # drive to waypoints
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
                 # if any(self.waypoints_list):
-                #     self.rotate_robot(num_turns=8)
+                #      self.rotate_robot(num_turns=8)
                 self.command['auto_fruit_search'] = True
                     
             # reset path planning algorithm
@@ -512,7 +518,7 @@ class Operate:
                 # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.01*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
                 
