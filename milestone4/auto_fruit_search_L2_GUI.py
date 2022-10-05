@@ -399,6 +399,7 @@ class Operate:
             self.update_slam(turn_drive_meas)
             
         print("Turning for {:.2f} seconds".format(turn_time))
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
             
         # update pygame display
         self.draw(canvas)
@@ -424,6 +425,7 @@ class Operate:
         pygame.display.update()
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
         
     # rotate robot to scan landmarks
     def rotate_robot(self, num_turns=8):
@@ -573,5 +575,5 @@ if __name__ == "__main__":
         
         # perform fruit search
         operate.auto_fruit_search(canvas)
-        
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
 
