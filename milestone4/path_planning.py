@@ -509,6 +509,29 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     
     return fruit_goals
 
+def generate_spoofed_obs(spoofed_obs):
+    # spoofed_obs should be a list of lists
+    # inner list should be [x, y]
+    spoofed_ox = []
+    spoofed_oy = []
+
+    for i in spoofed_obs:
+        spoofed_ox.append(int(i[0] * 10))
+        spoofed_oy.append(int(i[1] * 10))
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            spoofed_ox.append(j)
+            spoofed_oy.append(int(i[1] * 10) - 1)
+        for j in range(int(i[0] * 10) - 1, int(i[0] * 10) + 2):
+            spoofed_ox.append(j)
+            spoofed_oy.append(int(i[1] * 10) + 1)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            spoofed_ox.append(int(i[0] * 10) - 1)
+            spoofed_oy.append(j)
+        for j in range(int(i[1] * 10) - 1, int(i[1] * 10) + 2):
+            spoofed_ox.append(int(i[0] * 10) + 1)
+            spoofed_oy.append(j)
+
+    return spoofed_ox, spoofed_oy
 
 class GenerateCoord:
     def __init__(self, fname):

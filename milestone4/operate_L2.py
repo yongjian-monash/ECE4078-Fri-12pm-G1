@@ -27,7 +27,6 @@ from network.scripts.detector import Detector
 
 # custom added
 import SLAM_eval
-from auto_fruit_search_L2 import *
 from path_planning import *
 
 class Operate:
@@ -71,7 +70,7 @@ class Operate:
         self.image_id = 0
         self.notification = 'Press ENTER to start SLAM'
         # a 5min timer
-        self.count_down = 300
+        self.count_down = 600
         self.start_time = time.time()
         self.control_clock = time.time()
         # initialise images
@@ -91,22 +90,22 @@ class Operate:
         
         self.bg = pygame.image.load('pics/gui_mask.jpg')
         
-        self.goals = []
-        self.path = []
+        self.path_planning = None
+        self.waypoints_list = []
 
-    # # wheel control
-    # def control(self):       
-        # if args.play_data:
-            # lv, rv = self.pibot.set_velocity()            
-        # else:
-            # lv, rv = self.pibot.set_velocity(
-                # self.command['motion'])
-        # if not self.data is None:
-            # self.data.write_keyboard(lv, rv)
-        # dt = time.time() - self.control_clock
-        # drive_meas = measure.Drive(lv, rv, dt)
-        # self.control_clock = time.time()
-        # return drive_meas
+    # wheel control
+    def control(self):       
+        if args.play_data:
+            lv, rv = self.pibot.set_velocity()            
+        else:
+            lv, rv = self.pibot.set_velocity(
+                self.command['motion'])
+        if not self.data is None:
+            self.data.write_keyboard(lv, rv)
+        dt = time.time() - self.control_clock
+        drive_meas = measure.Drive(lv, rv, dt)
+        self.control_clock = time.time()
+        return drive_meas
         
     # camera control
     def take_pic(self):
@@ -245,125 +244,40 @@ class Operate:
         canvas.blit(caption_surface, (position[0], position[1]-25))
 
     # keyboard teleoperation        
-    # def update_keyboard(self):
-        # for event in pygame.event.get():
-            # # drive forward
-            # if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                # self.command['motion'] = [2, 0]
-            # # drive backward
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                # self.command['motion'] = [-2, 0] 
-            # # turn left
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                # self.command['motion'] = [0, 2] 
-            # # drive right
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                # self.command['motion'] = [0, -2] 
-            # # stop
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                # self.command['motion'] = [0, 0]
-            # # save image
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
-                # self.command['save_image'] = True
-            # # save SLAM map
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                # self.command['output'] = True
-            # # reset SLAM map
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                # if self.double_reset_comfirm == 0:
-                    # self.notification = 'Press again to confirm CLEAR MAP'
-                    # self.double_reset_comfirm +=1
-                # elif self.double_reset_comfirm == 1:
-                    # self.notification = 'SLAM Map is cleared'
-                    # self.double_reset_comfirm = 0
-                    # self.ekf.reset()
-            # # run SLAM
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                # n_observed_markers = len(self.ekf.taglist)
-                # if n_observed_markers == 0:
-                    # if not self.ekf_on:
-                        # self.notification = 'SLAM is running'
-                        # self.ekf_on = True
-                    # else:
-                        # self.notification = '> 2 landmarks is required for pausing'
-                # elif n_observed_markers < 3:
-                    # self.notification = '> 2 landmarks is required for pausing'
-                # else:
-                    # if not self.ekf_on:
-                        # self.request_recover_robot = True
-                    # self.ekf_on = not self.ekf_on
-                    # if self.ekf_on:
-                        # self.notification = 'SLAM is running'
-                    # else:
-                        # self.notification = 'SLAM is paused'
-            # # run object detector
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                # self.command['inference'] = True
-            # # save object detection outputs
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_n:
-                # self.command['save_inference'] = True
-            # # quit
-            # elif event.type == pygame.QUIT:
-                # self.quit = True
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # self.quit = True
-            # # output RMSE during run
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
-                # self.command['output2'] = True
-        # if self.quit:
-            # pygame.quit()
-            # sys.exit()
-            
-    def generate_path(self):
-        gen_cor = GenerateCoord('M4_true_map.txt')
-        # fruit_list, _, _ = gen_cor.read_true_map()
-        # obs_fruit_list = []
-        spoofed_obs = []
-        spoofed_ox = [[],[],[],[]]
-        spoofed_oy = [[],[],[],[]]
-        # prev_len = len(spoofed_obs)
-
-        sx, sy, gx, gy, fx, fy, ox, oy, face_angle = gen_cor.generate_points(spoofed_obs)
-        dstarlite = DStarLite(ox, oy)
-        
-        self.waypoints_list = []
-        for i in range(len(sx)):
-            _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
-            pathx.pop(0)
-            pathy.pop(0)
-            temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
-            self.waypoints_list.append(temp)
-        print(self.waypoints_list)
-        print("Path generated")
-        
-    def auto_fruit_search(self):
-        if self.command['auto_fruit_search']:
-            if any(self.waypoints_list):
-                if self.waypoints_list[0]:
-                    # estimate the robot's pose
-                    robot_pose = get_robot_pose(self)
-
-                    # robot drives to the waypoint
-                    drive_to_point(self.waypoints_list[0][0],robot_pose,self)
-                    robot_pose = get_robot_pose(self)
-                    print("Finished driving to waypoint: {}; New robot pose: {}".format(self.waypoints_list[0][0],robot_pose))
-                    
-                    self.waypoints_list[0].pop(0)
-                    print(self.waypoints_list)
-
-                    if not self.waypoints_list[0]:
-                        self.waypoints_list.pop(0)
-                        print("Sleep 3 seconds")
-                        time.sleep(3)
-            else:
-                print("Waypoints list is empty")
-                self.waypoints_list = []
-                self.command['auto_fruit_search'] = False
-            
-    def update_keyboard_L2(self):
+    def update_keyboard(self):
         for event in pygame.event.get():
+            # drive forward
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                self.command['motion'] = [2, 0]
+            # drive backward
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                self.command['motion'] = [-2, 0] 
+            # turn left
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                self.command['motion'] = [0, 2] 
+            # drive right
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                self.command['motion'] = [0, -2] 
+            # stop
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.command['motion'] = [0, 0]
+            # save image
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
+                self.command['save_image'] = True
+            # save SLAM map
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                self.command['output'] = True
+            # reset SLAM map
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                if self.double_reset_comfirm == 0:
+                    self.notification = 'Press again to confirm CLEAR MAP'
+                    self.double_reset_comfirm +=1
+                elif self.double_reset_comfirm == 1:
+                    self.notification = 'SLAM Map is cleared'
+                    self.double_reset_comfirm = 0
+                    self.ekf.reset()
             # run SLAM
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 n_observed_markers = len(self.ekf.taglist)
                 if n_observed_markers == 0:
                     if not self.ekf_on:
@@ -381,21 +295,218 @@ class Operate:
                         self.notification = 'SLAM is running'
                     else:
                         self.notification = 'SLAM is paused'
-                        
+            # run object detector
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                self.command['inference'] = True
+            # save object detection outputs
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_n:
+                self.command['save_inference'] = True
+            # quit
+            elif event.type == pygame.QUIT:
+                self.quit = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.quit = True
+            # output RMSE during run
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                self.command['output2'] = True
+        if self.quit:
+            pygame.quit()
+            sys.exit()
+            
+    # Generate paths to all fruits in search list
+    def generate_path(self):
+        ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
+        self.path_planning = DStarLite(ox, oy)
+        
+        sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
+        
+        self.waypoints_list = []
+        for i in range(len(sx)):
+            _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[], spoofed_oy=[])
+            pathx.pop(0)
+            pathy.pop(0)
+            temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+            self.waypoints_list.append(temp)
+            
+        # Feedback
+        print(f"Path generated: {self.waypoints_list}")
+        
+    # Perform fruit search to all fruits in search list
+    def auto_fruit_search(self, canvas):
+        if self.command['auto_fruit_search']:
+            if any(self.waypoints_list):
+                if self.waypoints_list[0]:
+                    # robot drives to the waypoint
+                    self.drive_to_point(self.waypoints_list[0][0], canvas)
+                    robot_pose = self.ekf.robot.state.squeeze().tolist()
+                    print("Finished driving to waypoint: {}; New robot pose: {}".format(self.waypoints_list[0][0],robot_pose))
+                    
+                    self.waypoints_list[0].pop(0)
+                    print(f"New waypoints list: {self.waypoints_list}")
+
+                    if not self.waypoints_list[0]:
+                        self.waypoints_list.pop(0)
+                        print("Fruit reached, robot sleeps for 3 seconds")
+                        time.sleep(3)
+            else:
+                print("Waypoints list is empty")
+                self.waypoints_list = []
+                self.command['auto_fruit_search'] = False
+    
+    # drive to a waypoint from current position
+    def drive_to_point(self, waypoint, canvas):
+        # imports camera / wheel calibration parameters 
+        fileS = "calibration/param/scale.txt"
+        scale = np.loadtxt(fileS, delimiter=',')
+        fileB = "calibration/param/baseline.txt"
+        baseline = np.loadtxt(fileB, delimiter=',')
+        
+        wheel_vel = 20 # tick to move the robot
+        
+        # compute x and y distance to waypoint
+        robot_pose = self.ekf.robot.state.squeeze().tolist()
+        x_diff = waypoint[0] - robot_pose[0]
+        y_diff = waypoint[1] - robot_pose[1]
+        
+        # wrap robot orientation to (-pi, pi]
+        robot_orient = (robot_pose[2]) % (2*np.pi)
+        if robot_orient > np.pi:
+            robot_orient -= 2*np.pi
+        
+        # compute minimum turning angle to waypoint
+        turn_diff = np.arctan2(y_diff, x_diff) - robot_orient
+        if turn_diff > np.pi:
+            turn_diff -= 2*np.pi
+        elif turn_diff < -np.pi:
+            turn_diff += 2*np.pi
+        
+        turn_time = 0.0
+        if turn_diff > 0.0: # turn left
+            turn_time = (abs(turn_diff)*baseline)/(2.0*scale*wheel_vel)
+            lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+            turn_drive_meas = measure.Drive(lv, rv, turn_time)
+            
+            # time.sleep(0.5)
+            self.take_pic()
+            self.update_slam(turn_drive_meas)
+            self.waypoint_update()
+
+        elif turn_diff < 0.0: # turn right
+            turn_time = (abs(turn_diff)*baseline*1.06)/(2.0*scale*wheel_vel)
+            lv, rv = self.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
+            turn_drive_meas = measure.Drive(lv, rv, turn_time)
+            
+            # time.sleep(0.5)
+            self.take_pic()
+            self.update_slam(turn_drive_meas)
+            self.waypoint_update()
+            
+        print("Turning for {:.2f} seconds".format(turn_time))
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+            
+        # update pygame display
+        self.draw(canvas)
+        pygame.display.update()
+        
+        # compute driving distance to waypoint
+        pos_diff = np.hypot(x_diff, y_diff)
+        
+        # after turning, drive straight to the waypoint
+        drive_time = pos_diff/(scale*wheel_vel)
+        print("Driving for {:.2f} seconds".format(drive_time))
+        
+        if pos_diff > 0.0:
+            lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
+            lin_drive_meas = measure.Drive(lv, rv, drive_time)
+            
+            # time.sleep(0.5)
+            self.take_pic()
+            self.update_slam(lin_drive_meas)
+            self.waypoint_update()
+        
+        # update pygame display
+        self.draw(canvas)
+        pygame.display.update()
+
+        print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        print()
+        
+    def waypoint_update(self, steps=7):
+        for _ in range(steps):
+            self.take_pic()
+            lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+            drive_meas = measure.Drive(lv, rv, 0.0)
+            self.update_slam(drive_meas)
+        
+    # rotate robot to scan landmarks
+    def rotate_robot(self, num_turns=8):
+        # imports camera / wheel calibration parameters 
+        fileS = "calibration/param/scale.txt"
+        scale = np.loadtxt(fileS, delimiter=',')
+        fileB = "calibration/param/baseline.txt"
+        baseline = np.loadtxt(fileB, delimiter=',')
+        
+        wheel_vel = 20 # tick to move the robot
+        
+        turn_resolution = 2*np.pi/num_turns
+        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
+        
+        for _ in range(num_turns):
+            lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+            turn_drive_meas = measure.Drive(lv, rv, turn_time)
+            
+            # time.sleep(0.2)
+            self.take_pic()
+            self.update_slam(turn_drive_meas)
+
+            self.waypoint_update()
+            # update pygame display
+            self.draw(canvas)
+
+            pygame.display.update()
+            
+    
+    # Keyboard control for Milestone 4 Level 2
+    def update_keyboard_L2(self):
+        for event in pygame.event.get():
+            # run SLAM
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+
+                n_observed_markers = len(self.ekf.taglist)
+                if n_observed_markers == 0:
+                    if not self.ekf_on:
+                        self.notification = 'SLAM is running'
+                        self.ekf_on = True
+                    else:
+                        self.notification = '> 2 landmarks is required for pausing'
+                elif n_observed_markers < 3:
+                    self.notification = '> 2 landmarks is required for pausing'
+                else:
+                    if not self.ekf_on:
+                        self.request_recover_robot = True
+                    self.ekf_on = not self.ekf_on
+                    if self.ekf_on:
+                        self.notification = 'SLAM is running'
+                    else:
+                        self.notification = 'SLAM is paused'
+
                 # read in the true map
-                fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+                # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
                     lms.append(measure_lm)
-                self.ekf.add_landmarks_init(lms)   
-                
+                self.ekf.add_landmarks_init(lms)  
+
             # run path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
                 self.generate_path()
                 
             # drive to waypoints
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                # if any(self.waypoints_list):
+                #      self.rotate_robot(num_turns=8)
                 self.command['auto_fruit_search'] = True
                     
             # reset path planning algorithm
@@ -404,12 +515,15 @@ class Operate:
                 self.ekf.reset()
                 
                 # read in the true map
-                fruits_list, fruits_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+                # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
                 lms = []
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)   
+                
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                self.command['inference'] = True
                 
             # quit
             elif event.type == pygame.QUIT:
@@ -466,7 +580,9 @@ if __name__ == "__main__":
             counter += 2
 
     operate = Operate(args)
-    robot_pose = [0.0,0.0,0.0]
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    search_list = read_search_list()
+    fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
 
     while start:
         operate.update_keyboard_L2()
@@ -481,7 +597,10 @@ if __name__ == "__main__":
         operate.draw(canvas)
         pygame.display.update()
         
-        # perform fruit search
-        operate.auto_fruit_search()
+        # detector view
+        operate.detect_target()
         
+        # perform fruit search
+        operate.auto_fruit_search(canvas)
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
 
