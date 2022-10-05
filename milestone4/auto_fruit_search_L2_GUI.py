@@ -389,6 +389,8 @@ class Operate:
             time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
+            waypoint_update(5)
+
         elif turn_diff < 0.0: # turn right
             turn_time = (abs(turn_diff)*baseline*1.08)/(2.0*scale*wheel_vel)
             lv, rv = self.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
@@ -397,6 +399,7 @@ class Operate:
             time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
+            waypoint_update(5)
             
         print("Turning for {:.2f} seconds".format(turn_time))
         print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
@@ -419,6 +422,7 @@ class Operate:
             time.sleep(0.5)
             self.take_pic()
             self.update_slam(lin_drive_meas)
+            waypoint_update(5)
         
         # update pygame display
         self.draw(canvas)
@@ -426,6 +430,14 @@ class Operate:
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
         print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        print()
+        
+    def waypoint_update(self, steps=5):
+        for _ in range(steps):
+            self.take_pic()
+            lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
+            drive_meas = measure.Drive(lv, rv, 0.0)
+            self.update_slam(drive_meas)
         
     # rotate robot to scan landmarks
     def rotate_robot(self, num_turns=8):
