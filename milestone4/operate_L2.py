@@ -341,6 +341,7 @@ class Operate:
                     self.drive_to_point(self.waypoints_list[0][0], canvas)
                     robot_pose = self.ekf.robot.state.squeeze().tolist()
                     print("Finished driving to waypoint: {}; New robot pose: {}".format(self.waypoints_list[0][0],robot_pose))
+                    print()
                     
                     self.waypoints_list[0].pop(0)
                     print(f"New waypoints list: {self.waypoints_list}")
@@ -440,9 +441,8 @@ class Operate:
         pygame.display.update()
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
-        print()
         
-    def waypoint_update(self, steps=7):
+    def waypoint_update(self, steps=3):
         for _ in range(steps):
             self.take_pic()
             lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
@@ -479,15 +479,13 @@ class Operate:
             self.take_pic()
             self.update_slam(turn_drive_meas)
 
-            print(f"Position rotate1: {self.ekf.robot.state.squeeze().tolist()}")
-
-            # self.waypoint_update()
-
             # update pygame display
             self.draw(canvas)
             pygame.display.update()
+            
+            self.waypoint_update()
 
-            print(f"Position rotate2: {self.ekf.robot.state.squeeze().tolist()}")
+            print(f"Position rotate: {self.ekf.robot.state.squeeze().tolist()}")
             
     
     # Keyboard control for Milestone 4 Level 2

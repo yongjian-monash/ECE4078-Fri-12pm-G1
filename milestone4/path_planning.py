@@ -894,8 +894,6 @@ def new_main():
     sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
     # print(gx)
     # print(gy)
-    gx[-1] = 0
-    gy[-1] = 8
     
     if show_animation:
         plt.figure(figsize=(4.8,4.8))

@@ -40,9 +40,6 @@ class aruco_detector:
             lm_tvecs = tvecs[ids==idi].T
             #lm_bff2d = np.block([[lm_tvecs[2,:]],[-lm_tvecs[0,:]]])
             
-            # custom offset for aruco z direction
-            # lm_bff2d = np.block([[lm_tvecs[2,:]],[-lm_tvecs[0,:]+0.08]])
-            
             # try this first (index 2 should be z direction), if worsens means direction of offset is wrong
             lm_bff2d = np.block([[lm_tvecs[2,:]+0.08],[-lm_tvecs[0,:]]])
             
