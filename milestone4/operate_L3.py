@@ -94,6 +94,7 @@ class Operate:
         self.path_planning = None
         self.waypoints_list = []
         self.spoofed_obs = []
+        self.fruit_goals_remain = []
 
     # wheel control
     def control(self):       
@@ -348,6 +349,9 @@ class Operate:
 
                     if not self.waypoints_list[0]:
                         self.waypoints_list.pop(0)
+                        print(f"Remaining fruit goals before: {self.fruit_goals_remain}")
+                        self.fruit_goals_remain = np.delete(self.fruit_goals_remain, 0, axis=0)
+                        print(f"Remaining fruit goals after: {self.fruit_goals_remain}")
                         print("Fruit reached, robot sleeps for 3 seconds")
                         time.sleep(3)
             else:
@@ -386,36 +390,43 @@ class Operate:
                     # obs_fruit_x = round_nearest(obs_fruit_x, 0.4)
                     # obs_fruit_y = round_nearest(obs_fruit_y, 0.4)
                     
-                    obs_fruit_coord = [obs_fruit_x, obs_fruit_y]
+                    obs_fruit_coord = np.array([obs_fruit_x, obs_fruit_y])
                     if obs_fruit_coord not in self.spoofed_obs:
-                        self.spoofed_obs.append(obs_fruit_coord)
+                        self.spoofed_obs.append(obs_fruit_coord) # list of array
                         print(f"New obstacles detected at position: {obs_fruit_coord}")  
                         update_flag = 1
-                    
+            
+            print(f"Update flag: {update_flag}")
+            
             if update_flag:
-                sx = []
-                sy = []
-                gx = []
-                gy = []
+                # sx = []
+                # sy = []
+                # gx = []
+                # gy = []
                 
-                # update latest starting and goal positions so robot does not revisit reached goal
-                for waypoint in self.waypoints_list:
-                    # self.waypoints_list is a list of lists of lists
-                    # outer list is list of [[x1,y1], [x2,y2], ...] points to go from start to goal
-                    # inner list is [x, y] 
-                    sx.append(int(waypoint[0][0]*10))
-                    sy.append(int(waypoint[0][1]*10))
-                    gx.append(int(waypoint[-1][0]*10))
-                    gy.append(int(waypoint[-1][1]*10))
+                # # update latest starting and goal positions so robot does not revisit reached goal
+                # for waypoint in self.waypoints_list:
+                    # # self.waypoints_list is a list of lists of lists
+                    # # outer list is list of [[x1,y1], [x2,y2], ...] points to go from start to goal
+                    # # inner list is [x, y] 
+                    # sx.append(int(waypoint[0][0]*10))
+                    # sy.append(int(waypoint[0][1]*10))
+                    # gx.append(int(waypoint[-1][0]*10))
+                    # gy.append(int(waypoint[-1][1]*10))
                     
                 spoofed_ox, spoofed_oy = generate_spoofed_obs(self.spoofed_obs)
+                sx, sy, gx, gy, fx, fy, face_angle = generate_points_L3(self.waypoints_list[0][0], self.fruit_goals_remain, aruco_true_pos, self.spoofed_obs)
                     
                 # generate new path, continued from before meeting obstacles
                 waypoints_list_new = []
                 for i in range(len(sx)):
                     _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
-                    pathx.pop(0)
-                    pathy.pop(0)
+                    
+                    # the current waypoint list should not pop first value, as the waypoint hasnt reached due to existence of fruit
+                    if i != 0:
+                        pathx.pop(0)
+                        pathy.pop(0)
+                        
                     temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
                     waypoints_list_new.append(temp)
                     
@@ -484,6 +495,9 @@ class Operate:
         
         drive_time = 0.0
         if pos_diff > 0.0:
+            # detect if fruit is in path before driving straight
+            # fruit_detect_update()
+        
             # after turning, drive straight to the waypoint
             drive_time = pos_diff/(scale*wheel_vel)
             lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
@@ -655,6 +669,7 @@ if __name__ == "__main__":
     fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
+    operate.fruit_goals_remain = fruit_goals
 
     while start:
         operate.update_keyboard_L2()
