@@ -428,6 +428,58 @@ def generate_points_L2(fruit_goals, aruco_true_pos):
     fy = (fruit_goals * 10).astype(int)[:, 1]
     
     return sx, sy, gx, gy, fx, fy, face_angle
+    
+def generate_points_L3(curr_pos, fruit_goals_remain, aruco_true_pos, spoofed_obs):
+    sx = np.array([curr_pos[0]])
+    sy = np.array([curr_pos[1]])
+    new_goal = np.zeros(fruit_goals_remain.shape)
+    face_angle = np.zeros(len(fruit_goals_remain))
+
+    # start and goal position
+    for i in range(len(fruit_goals_remain)):
+        possible_goal = []
+        possible_angle = []
+        
+        # start from north, in 8 compass position away from goal
+        d = 0.2 # distance from goal
+        x_list = [-d, -d, 0, d, d, d, 0, -d]
+        y_list = [0, -d, -d, -d, 0, d, d, d]
+        angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+        
+        # # start from north, in 4 compass position away from goal
+        # d = 0.2 # distance from goal
+        # x_list = [-d, 0, d, 0]
+        # y_list = [0, -d, 0, d]
+        # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
+        
+        for k in range(len(x_list)):
+            x = round_nearest(fruit_goals_remain[i][0] + x_list[k], 0.2)
+            y = round_nearest(fruit_goals_remain[i][1] + y_list[k], 0.2)
+            
+            if not (np.array([x, y]) == aruco_true_pos).all(1).any() and not (np.array([x,y]) == spoofed_obs).all(1).any():
+                possible_goal.append(np.array([x, y]))
+                possible_angle.append(angle_list[k])
+
+        min_val = 10000
+        for j in range(len(possible_goal)):
+            dis = np.hypot(abs(sx[i] - possible_goal[j][0]), abs(sy[i] - possible_goal[j][1]))
+            if dis < min_val:
+                min_val = dis
+                new_goal[i] = possible_goal[j]
+                face_angle[i] = possible_angle[j]
+        sx = np.append(sx, new_goal[i][0])
+        sy = np.append(sy, new_goal[i][1])
+    sx = (sx * 10).astype(int)
+    sy = (sy * 10).astype(int)
+    sx = np.delete(sx, -1)
+    sy = np.delete(sy, -1)
+
+    gx = (new_goal * 10).astype(int)[:, 0]  # [m]
+    gy = (new_goal * 10).astype(int)[:, 1]  # [m]
+    fx = (fruit_goals_remain * 10).astype(int)[:, 0]
+    fy = (fruit_goals_remain * 10).astype(int)[:, 1]
+    
+    return sx, sy, gx, gy, fx, fy, face_angle
 
 def read_true_map(fname):
     """Read the ground truth map and output the pose of the ArUco markers and 3 types of target fruit to search
@@ -840,6 +892,10 @@ def new_main():
     dstarlite = DStarLite(ox, oy)
     
     sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
+    # print(gx)
+    # print(gy)
+    gx[-1] = 0
+    gy[-1] = 8
     
     if show_animation:
         plt.figure(figsize=(4.8,4.8))
