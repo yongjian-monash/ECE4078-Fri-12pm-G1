@@ -34,17 +34,16 @@ def drive_to_point(ppi, turn_diff = 0.0, pos_diff = 0.0):
     if turn_diff > 0: # turn left
         turn_time = (abs(turn_diff)*baseline)/(2.0*scale*wheel_vel)
         lv, rv = ppi.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
+        print("Turning for {:.2f} seconds".format(turn_time))
     elif turn_diff < 0: # turn right
         turn_time = (abs(turn_diff)*baseline*1.06)/(2.0*scale*wheel_vel)
-        lv, rv = ppi.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
-    print("Turning for {:.2f} seconds".format(turn_time))
+        lv, rv = ppi.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
+        print("Turning for {:.2f} seconds".format(turn_time))
     
     if pos_diff > 0:
         drive_time = pos_diff/(scale*wheel_vel)
-        lv, rv = operate.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
-    print("Driving for {:.2f} seconds".format(drive_time))
-
-    print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+        lv, rv = ppi.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
+        print("Driving for {:.2f} seconds".format(drive_time))
     
 # rotate robot to scan landmarks
 def rotate_robot(ppi, num_turns=8):
@@ -57,12 +56,12 @@ def rotate_robot(ppi, num_turns=8):
     wheel_vel = 20 # tick to move the robot
     
     turn_resolution = 2*np.pi/num_turns
-    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
+    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.03
     print(turn_time)
     
     for _ in range(num_turns):
         lv, rv = ppi.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
-        time.sleep(0.2)
+        time.sleep(1)
 
 # main loop
 if __name__ == "__main__":
@@ -77,6 +76,16 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     ppi = Alphabot(args.ip,args.port)
+
+    while True:
+        steps = input("Step number: ")
+        try:
+            steps = int(steps)
+        except ValueError:
+            print("Please enter an integer.")
+            continue
+
+        rotate_robot(ppi, steps)
 
     while True:
         turn_diff,pos_diff = 0.0,0.0

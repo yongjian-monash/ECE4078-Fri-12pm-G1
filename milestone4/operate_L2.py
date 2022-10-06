@@ -92,6 +92,7 @@ class Operate:
         
         self.path_planning = None
         self.waypoints_list = []
+        self.count_rot=0
 
     # wheel control
     def control(self):       
@@ -182,7 +183,7 @@ class Operate:
             self.command['save_inference'] = False
         # custom function
         if self.command['output2']:
-            # self.output.write_map2(self.ekf)
+            self.output.write_map2(self.ekf)
             SLAM_eval.display_marker_rmse()
             self.command['output2'] = False
 
@@ -348,6 +349,14 @@ class Operate:
                         self.waypoints_list.pop(0)
                         print("Fruit reached, robot sleeps for 3 seconds")
                         time.sleep(3)
+
+                    self.command['output2'] = True
+                    self.record_data()
+
+                    self.count_rot=self.count_rot+1
+                    if self.count_rot==3:
+                        self.rotate_robot(num_turns=12)
+                        self.count_rot=0
             else:
                 print("Waypoints list is empty")
                 self.waypoints_list = []
@@ -386,7 +395,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            # time.sleep(0.5)
+            time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
             self.waypoint_update()
@@ -396,7 +405,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            # time.sleep(0.5)
+            time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
             self.waypoint_update()
@@ -418,7 +427,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
             lin_drive_meas = measure.Drive(lv, rv, drive_time)
             
-            # time.sleep(0.5)
+            time.sleep(0.5)
             self.take_pic()
             self.update_slam(lin_drive_meas)
             self.waypoint_update()
@@ -439,6 +448,10 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
             drive_meas = measure.Drive(lv, rv, 0.0)
             self.update_slam(drive_meas)
+
+            # update pygame display
+            self.draw(canvas)
+            pygame.display.update()
         
     # rotate robot to scan landmarks
     def rotate_robot(self, num_turns=8):
@@ -451,21 +464,30 @@ class Operate:
         wheel_vel = 20 # tick to move the robot
         
         turn_resolution = 2*np.pi/num_turns
-        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
+        if(num_turns==8):
+            turn_offset=0.024
+        elif num_turns==12:
+            turn_offset=0.03
+
+        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + turn_offset
         
         for _ in range(num_turns):
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
-            turn_drive_meas = measure.Drive(lv, rv, turn_time)
+            turn_drive_meas = measure.Drive(lv, rv, turn_time-turn_offset)
             
-            # time.sleep(0.2)
+            time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
 
-            self.waypoint_update()
+            print(f"Position rotate1: {self.ekf.robot.state.squeeze().tolist()}")
+
+            # self.waypoint_update()
+
             # update pygame display
             self.draw(canvas)
-
             pygame.display.update()
+
+            print(f"Position rotate2: {self.ekf.robot.state.squeeze().tolist()}")
             
     
     # Keyboard control for Milestone 4 Level 2
@@ -509,6 +531,7 @@ class Operate:
                 # if any(self.waypoints_list):
                 #      self.rotate_robot(num_turns=8)
                 self.command['auto_fruit_search'] = True
+                
                     
             # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
