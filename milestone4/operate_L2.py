@@ -411,11 +411,10 @@ class Operate:
         # compute driving distance to waypoint
         pos_diff = np.hypot(x_diff, y_diff)
         
-        # after turning, drive straight to the waypoint
-        drive_time = pos_diff/(scale*wheel_vel)
-        print("Driving for {:.2f} seconds".format(drive_time))
-        
+        drive_time = 0.0
         if pos_diff > 0.0:
+            # after turning, drive straight to the waypoint
+            drive_time = pos_diff/(scale*wheel_vel)
             lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
             lin_drive_meas = measure.Drive(lv, rv, drive_time)
             
@@ -423,13 +422,15 @@ class Operate:
             self.take_pic()
             self.update_slam(lin_drive_meas)
             self.waypoint_update()
+            
+        print("Driving for {:.2f} seconds".format(drive_time))
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
         
         # update pygame display
         self.draw(canvas)
         pygame.display.update()
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
-        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
         print()
         
     def waypoint_update(self, steps=7):
