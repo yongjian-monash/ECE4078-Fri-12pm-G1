@@ -354,3 +354,4 @@ if __name__ == "__main__":
         # visualise
         operate.draw(canvas)
         pygame.display.update()
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
