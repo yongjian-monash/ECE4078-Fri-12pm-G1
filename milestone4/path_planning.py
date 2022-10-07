@@ -110,8 +110,8 @@ class DStarLite:
 
         # Below is the same as 1; modify if you modify the cost of each move in
         # motion
-        return max(abs(self.start.x - s.x), abs(self.start.y - s.y))
-        # return 1
+        # return max(abs(self.start.x - s.x), abs(self.start.y - s.y))
+        return 1
 
     def calculate_key(self, s: Node):
         return (min(self.g[s.x][s.y], self.rhs[s.x][s.y]) + self.h(s)
@@ -936,8 +936,119 @@ def new_main():
         
     plt.show()
 
+def detect_fruit_path():
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    search_list = read_search_list()
+    fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
+    
+    ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
+    dstarlite = DStarLite(ox, oy)
+    
+    sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
+    # print(gx)
+    # print(gy)
+    
+    if show_animation:
+        plt.figure(figsize=(4.8,4.8))
+        plt.plot(ox, oy, ".k")
+        plt.plot(sx, sy, "og")
+        plt.plot(gx, gy, "xb")
+        plt.plot(fx, fy, ".r")
+        plt.grid(True)
+        plt.axis("equal")
+        label_column = ['Start', 'Goal', 'Fruits', 'Path taken',
+                        'Current computed path', 'Previous computed path',
+                        'Obstacles']
+        columns = [plt.plot([], [], symbol, color=colour, alpha=alpha)[0]
+                   for symbol, colour, alpha in [['o', 'g', 1],
+                                                 ['x', 'b', 1],
+                                                 ['.', 'r', 1],
+                                                 ['-', 'r', 1],
+                                                 ['.', 'c', 1],
+                                                 ['.', 'c', 0.3],
+                                                 ['.', 'k', 1]]]
+        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:", fontsize="xx-small")
+        plt.plot()
+        plt.xlim(-20, 20)
+        plt.ylim(-20, 20)
+        plt.xticks(np.arange(-20, 21, 4))
+        plt.yticks(np.arange(-20, 21, 4))
+        # plt.show()
+        plt.pause(pause_time)
+        
+        
+    
+    waypoints_list = []
+    for i in range(len(sx)):
+        _, pathx, pathy = dstarlite.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[], spoofed_oy=[])
+        pathx.pop(0)
+        pathy.pop(0)
+        temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+        waypoints_list.append(temp)
+    print(waypoints_list)
+    
+    a = np.array([0.4, 0.0])
+    # b = np.array([1.0, -0.6])
+    spoofed_obs = []
+    spoofed_obs.append(a)
+    # spoofed_obs.append(b)
+    spoofed_ox, spoofed_oy = generate_spoofed_obs(spoofed_obs)
+    ox.extend(spoofed_ox)
+    oy.extend(spoofed_oy)
+    dstarlite = DStarLite(ox, oy)
+    curr_waypoint = [0.0, 0.0]
+    sx2, sy2, gx2, gy2, fx2, fy2, face_angle2 = generate_points_L3(curr_waypoint, fruit_goals, aruco_true_pos, spoofed_obs)
+        
+    if show_animation:
+        plt.figure(figsize=(4.8,4.8))
+        plt.plot(ox, oy, ".k")
+        plt.plot(sx2, sy2, "og")
+        plt.plot(gx2, gy2, "xb")
+        plt.plot(fx2, fy2, ".r")
+        plt.grid(True)
+        plt.axis("equal")
+        label_column = ['Start', 'Goal', 'Fruits', 'Path taken',
+                        'Current computed path', 'Previous computed path',
+                        'Obstacles']
+        columns = [plt.plot([], [], symbol, color=colour, alpha=alpha)[0]
+                   for symbol, colour, alpha in [['o', 'g', 1],
+                                                 ['x', 'b', 1],
+                                                 ['.', 'r', 1],
+                                                 ['-', 'r', 1],
+                                                 ['.', 'c', 1],
+                                                 ['.', 'c', 0.3],
+                                                 ['.', 'k', 1]]]
+        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:", fontsize="xx-small")
+        plt.plot()
+        plt.xlim(-20, 20)
+        plt.ylim(-20, 20)
+        plt.xticks(np.arange(-20, 21, 4))
+        plt.yticks(np.arange(-20, 21, 4))
+        # plt.show()
+        plt.pause(pause_time)
+        
+    # generate new path, continued from before meeting obstacles
+    waypoints_list_new = []
+    for i in range(len(sx2)):
+        _, pathx, pathy = dstarlite.main(Node(x=sx2[i], y=sy2[i]), Node(x=gx2[i], y=gy2[i]), spoofed_ox=[[]], spoofed_oy=[[]])
+
+        pathx.pop(0)
+        pathy.pop(0)
+            
+        temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+        waypoints_list_new.append(temp)
+        
+    # self.waypoints_list = waypoints_list_new
+    # waypoints_list_new[0].insert(0, )
+    print(waypoints_list_new)
+    # print(waypoints_list_new[0].pop(0))
+    # # Feedback
+    # print(f"New path generated due to fruit: {self.waypoints_list}")
+    plt.show()
+    
+
 if __name__ == "__main__":
     show_animation = True
     pause_time = 0.1
     p_create_random_obstacle = 0
-    new_main()
+    detect_fruit_path()

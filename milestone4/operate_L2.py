@@ -355,7 +355,7 @@ class Operate:
                     self.record_data()
 
                     self.count_rot=self.count_rot+1
-                    if self.count_rot==3:
+                    if self.count_rot==4:
                         self.rotate_robot(num_turns=12)
                         self.count_rot=0
             else:

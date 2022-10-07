@@ -92,12 +92,9 @@ class Operate:
         self.bg = pygame.image.load('pics/gui_mask.jpg')
         
         self.path_planning = None
-        self.ox = []
-        self.oy = []
         self.waypoints_list = []
         self.spoofed_obs = []
         self.fruit_goals_remain = []
-        self.count_rot=0
 
     # wheel control
     def control(self):       
@@ -183,15 +180,12 @@ class Operate:
                 self.pred_fname = self.output.write_image(self.file_output[0],
                                                         self.file_output[1])
                 self.notification = f'Prediction is saved to {operate.pred_fname}'
-                
-                # testing
-                self.fruit_detect_update_test()
             else:
                 self.notification = f'No prediction in buffer, save ignored'
             self.command['save_inference'] = False
         # custom function
         if self.command['output2']:
-            self.output.write_map2(self.ekf)
+            # self.output.write_map2(self.ekf)
             SLAM_eval.display_marker_rmse()
             self.command['output2'] = False
 
@@ -324,14 +318,14 @@ class Operate:
             
     # Generate paths to all fruits in search list
     def generate_path(self):
-        self.ox, self.oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
-        self.path_planning = DStarLite(self.ox, self.oy)
+        ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
+        self.path_planning = DStarLite(ox, oy)
         
         sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
         
         self.waypoints_list = []
         for i in range(len(sx)):
-            _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[[]], spoofed_oy=[[]])
+            _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[], spoofed_oy=[])
             pathx.pop(0)
             pathy.pop(0)
             temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
@@ -349,7 +343,6 @@ class Operate:
                     self.drive_to_point(self.waypoints_list[0][0], canvas)
                     robot_pose = self.ekf.robot.state.squeeze().tolist()
                     print("Finished driving to waypoint: {}; New robot pose: {}".format(self.waypoints_list[0][0],robot_pose))
-                    print()
                     
                     self.waypoints_list[0].pop(0)
                     print(f"New waypoints list: {self.waypoints_list}")
@@ -361,174 +354,86 @@ class Operate:
                         print(f"Remaining fruit goals after: {self.fruit_goals_remain}")
                         print("Fruit reached, robot sleeps for 3 seconds")
                         time.sleep(3)
-
-                    self.command['output2'] = True
-                    self.record_data()
-
-                    self.count_rot=self.count_rot+1
-                    if self.count_rot==4:
-                        self.rotate_robot(num_turns=12)
-                        self.count_rot=0
             else:
                 print("Waypoints list is empty")
                 self.waypoints_list = []
                 self.command['auto_fruit_search'] = False
     
     # Detect fruits and update path
-    def fruit_detect_update_test(self):
-        self.take_pic()
-        
-        # same as pressing P key
-        self.detector_output, self.network_vis = self.detector.yolo_detect_single_image(self.img)
-        self.file_output = (self.detector_output, self.ekf)
-        self.notification = f'{len(np.unique(self.detector_output))-1} target type(s) detected'
-        
-        # same as pressin N key
-        self.pred_fname = self.output.write_image(self.file_output[0], self.file_output[1])
-        # self.notification = f'Prediction is saved to {operate.pred_fname}'
-        
-        # estimate detected fruit position
-        target_est = live_fruit_pose()
-        print(f"Detected fruit positions: {target_est}")
-        
-        update_flag = 0
-        for key in target_est:
-            print(key)
-            print(key[:-2])
-            print(fruit_list)
-            if key[:-2] not in fruit_list:
-                obs_fruit_x = target_est[key]['x']
-                obs_fruit_y = target_est[key]['y']
-                
-                obs_fruit_x = np.round(obs_fruit_x, 1)
-                obs_fruit_y = np.round(obs_fruit_y, 1)
-                print(obs_fruit_x)
-                print(obs_fruit_y)
-                
-                # snap to grid, not allowed by tutor
-                # obs_fruit_x = round_nearest(obs_fruit_x, 0.4)
-                # obs_fruit_y = round_nearest(obs_fruit_y, 0.4)
-                
-                obs_fruit_coord = np.array([obs_fruit_x, obs_fruit_y])
-                print(obs_fruit_coord)
-                if self.spoofed_obs:
-                    if not (obs_fruit_coord == self.spoofed_obs).all(1).any():
-                        self.spoofed_obs.append(obs_fruit_coord) # list of array
-                        print(f"New obstacles detected at position: {obs_fruit_coord}")  
-                        update_flag = 1
-                else:
-                    self.spoofed_obs.append(obs_fruit_coord) # list of array
-                    print(f"New obstacles detected at position: {obs_fruit_coord}")  
-                    update_flag = 1
-                print(self.spoofed_obs)
-        
-        print(f"Update flag: {update_flag}")
-        
-        if update_flag:
-            spoofed_ox, spoofed_oy = generate_spoofed_obs(self.spoofed_obs)
-            self.ox.extend(spoofed_ox)
-            self.oy.extend(spoofed_oy)
-            self.path_planning = DStarLite(self.ox, self.oy)
-            
-            curr_pose = self.ekf.robot.state.squeeze().tolist()
-            x = round_nearest(curr_pose[0], 0.2)
-            y = round_nearest(curr_pose[1], 0.2)
-            curr_pose = [x, y]
-            
-            sx, sy, gx, gy, fx, fy, face_angle = generate_points_L3(curr_pose, self.fruit_goals_remain, aruco_true_pos, self.spoofed_obs)
-                
-            # generate new path, continued from before meeting obstacles
-            waypoints_list_new = []
-            for i in range(len(sx)):
-                _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[[]], spoofed_oy=[[]])
-
-                pathx.pop(0)
-                pathy.pop(0)
-                    
-                temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
-                waypoints_list_new.append(temp)
-                
-            self.waypoints_list = waypoints_list_new
-            self.waypoints_list[0].insert(0, curr_pose)
-            # Feedback
-            print(f"New path generated due to fruit: {self.waypoints_list}")
-            
-        return update_flag
-    
-    # Detect fruits and update path
     def fruit_detect_update(self):
-        self.take_pic()
-        
-        # same as pressing P key
-        self.detector_output, self.network_vis = self.detector.yolo_detect_single_image(self.img)
-        self.file_output = (self.detector_output, self.ekf)
-        self.notification = f'{len(np.unique(self.detector_output))-1} target type(s) detected'
-        
-        # same as pressin N key
-        self.pred_fname = self.output.write_image(self.file_output[0], self.file_output[1])
-        # self.notification = f'Prediction is saved to {operate.pred_fname}'
-        
-        # estimate detected fruit position
-        target_est = live_fruit_pose()
-        print(f"Detected fruit positions: {target_est}")
-        
-        update_flag = 0
-        for key in target_est:
-            if key[:-2] not in fruit_list:
-                obs_fruit_x = target_est[key]['x']
-                obs_fruit_y = target_est[key]['y']
-                
-                obs_fruit_x = np.round(obs_fruit_x, 1)
-                obs_fruit_y = np.round(obs_fruit_y, 1)
-                
-                # snap to grid, not allowed by tutor
-                # obs_fruit_x = round_nearest(obs_fruit_x, 0.4)
-                # obs_fruit_y = round_nearest(obs_fruit_y, 0.4)
-                
-                obs_fruit_coord = np.array([obs_fruit_x, obs_fruit_y])
-                if self.spoofed_obs:
-                    if not (obs_fruit_coord == self.spoofed_obs).all(1).any():
+        if any(self.waypoints_list):
+            self.take_pic()
+            
+            # same as pressing P key
+            self.detector_output, self.network_vis = self.detector.yolo_detect_single_image(self.img)
+            self.file_output = (self.detector_output, self.ekf)
+            self.notification = f'{len(np.unique(self.detector_output))-1} target type(s) detected'
+            
+            # same as pressin N key
+            self.pred_fname = self.output.write_image(self.file_output[0], self.file_output[1])
+            # self.notification = f'Prediction is saved to {operate.pred_fname}'
+            
+            # estimate detected fruit position
+            target_est = live_fruit_pose()
+            print(f"Detected fruit positions: {target_est}")
+            
+            update_flag = 0
+            for key in target_est:
+                if key[:-2] not in fruit_list:
+                    obs_fruit_x = target_est[key]['x']
+                    obs_fruit_y = target_est[key]['y']
+                    
+                    obs_fruit_x = np.round(obs_fruit_x, 1)
+                    obs_fruit_y = np.round(obs_fruit_y, 1)
+                    
+                    # snap to grid, not allowed by tutor
+                    # obs_fruit_x = round_nearest(obs_fruit_x, 0.4)
+                    # obs_fruit_y = round_nearest(obs_fruit_y, 0.4)
+                    
+                    obs_fruit_coord = np.array([obs_fruit_x, obs_fruit_y])
+                    if obs_fruit_coord not in self.spoofed_obs:
                         self.spoofed_obs.append(obs_fruit_coord) # list of array
                         print(f"New obstacles detected at position: {obs_fruit_coord}")  
                         update_flag = 1
-                else:
-                    self.spoofed_obs.append(obs_fruit_coord) # list of array
-                    print(f"New obstacles detected at position: {obs_fruit_coord}")  
-                    update_flag = 1
-                print(self.spoofed_obs)
-        
-        print(f"Update flag: {update_flag}")
             
-        if update_flag:
-            spoofed_ox, spoofed_oy = generate_spoofed_obs(self.spoofed_obs)
-            self.ox.extend(spoofed_ox)
-            self.oy.extend(spoofed_oy)
-            self.path_planning = DStarLite(self.ox, self.oy)
+            print(f"Update flag: {update_flag}")
             
-            curr_pose = self.ekf.robot.state.squeeze().tolist()
-            x = round_nearest(curr_pose[0], 0.2)
-            y = round_nearest(curr_pose[1], 0.2)
-            curr_pose = [x, y]
-            
-            sx, sy, gx, gy, fx, fy, face_angle = generate_points_L3(curr_pose, self.fruit_goals_remain, aruco_true_pos, self.spoofed_obs)
+            if update_flag:
+                # sx = []
+                # sy = []
+                # gx = []
+                # gy = []
                 
-            # generate new path, continued from before meeting obstacles
-            waypoints_list_new = []
-            for i in range(len(sx)):
-                _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=[[]], spoofed_oy=[[]])
-
-                pathx.pop(0)
-                pathy.pop(0)
+                # # update latest starting and goal positions so robot does not revisit reached goal
+                # for waypoint in self.waypoints_list:
+                    # # self.waypoints_list is a list of lists of lists
+                    # # outer list is list of [[x1,y1], [x2,y2], ...] points to go from start to goal
+                    # # inner list is [x, y] 
+                    # sx.append(int(waypoint[0][0]*10))
+                    # sy.append(int(waypoint[0][1]*10))
+                    # gx.append(int(waypoint[-1][0]*10))
+                    # gy.append(int(waypoint[-1][1]*10))
                     
-                temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
-                waypoints_list_new.append(temp)
-                
-            self.waypoints_list = waypoints_list_new
-            self.waypoints_list[0].insert(0, curr_pose)
-            # Feedback
-            print(f"New path generated due to fruit: {self.waypoints_list}")
-            
-        return update_flag
+                spoofed_ox, spoofed_oy = generate_spoofed_obs(self.spoofed_obs)
+                sx, sy, gx, gy, fx, fy, face_angle = generate_points_L3(self.waypoints_list[0][0], self.fruit_goals_remain, aruco_true_pos, self.spoofed_obs)
+                    
+                # generate new path, continued from before meeting obstacles
+                waypoints_list_new = []
+                for i in range(len(sx)):
+                    _, pathx, pathy = self.path_planning.main(Node(x=sx[i], y=sy[i]), Node(x=gx[i], y=gy[i]), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
+                    
+                    # the current waypoint list should not pop first value, as the waypoint hasnt reached due to existence of fruit
+                    if i != 0:
+                        pathx.pop(0)
+                        pathy.pop(0)
+                        
+                    temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
+                    waypoints_list_new.append(temp)
+                    
+                self.waypoints_list = waypoints_list_new
+                self.waypoints_list[0].insert(0, [0.0,0.0])
+                # Feedback
+                print(f"New path generated due to fruit: {self.waypoints_list}")
     
     # drive to a waypoint from current position
     def drive_to_point(self, waypoint, canvas):
@@ -563,7 +468,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
             self.waypoint_update()
@@ -573,7 +478,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, -1], turning_tick=wheel_vel, time=turn_time)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(turn_drive_meas)
             self.waypoint_update()
@@ -591,16 +496,14 @@ class Operate:
         drive_time = 0.0
         if pos_diff > 0.0:
             # detect if fruit is in path before driving straight
-            # update = fruit_detect_update()
-            # if update:
-                # return
-            
+            # fruit_detect_update()
+        
             # after turning, drive straight to the waypoint
             drive_time = pos_diff/(scale*wheel_vel)
             lv, rv = self.pibot.set_velocity([1, 0], tick=wheel_vel, time=drive_time)
             lin_drive_meas = measure.Drive(lv, rv, drive_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.5)
             self.take_pic()
             self.update_slam(lin_drive_meas)
             self.waypoint_update()
@@ -613,17 +516,14 @@ class Operate:
         pygame.display.update()
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
+        print()
         
-    def waypoint_update(self, steps=3):
+    def waypoint_update(self, steps=7):
         for _ in range(steps):
             self.take_pic()
             lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
             drive_meas = measure.Drive(lv, rv, 0.0)
             self.update_slam(drive_meas)
-
-            # update pygame display
-            self.draw(canvas)
-            pygame.display.update()
         
     # rotate robot to scan landmarks
     def rotate_robot(self, num_turns=8):
@@ -636,28 +536,21 @@ class Operate:
         wheel_vel = 20 # tick to move the robot
         
         turn_resolution = 2*np.pi/num_turns
-        if(num_turns==8):
-            turn_offset=0.024
-        elif num_turns==12:
-            turn_offset=0.03
-
-        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + turn_offset
+        turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.024
         
         for _ in range(num_turns):
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time)
-            turn_drive_meas = measure.Drive(lv, rv, turn_time-turn_offset)
+            turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            # time.sleep(0.2)
             self.take_pic()
             self.update_slam(turn_drive_meas)
 
+            self.waypoint_update()
             # update pygame display
             self.draw(canvas)
-            pygame.display.update()
-            
-            self.waypoint_update()
 
-            print(f"Position rotate: {self.ekf.robot.state.squeeze().tolist()}")
+            pygame.display.update()
             
     
     # Keyboard control for Milestone 4 Level 2
@@ -701,7 +594,6 @@ class Operate:
                 # if any(self.waypoints_list):
                 #      self.rotate_robot(num_turns=8)
                 self.command['auto_fruit_search'] = True
-                
                     
             # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
@@ -718,11 +610,6 @@ class Operate:
                 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
-                
-            # save object detection outputs
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_n:
-                self.command['save_inference'] = True
-                
                 
             # quit
             elif event.type == pygame.QUIT:
@@ -783,7 +670,7 @@ if __name__ == "__main__":
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
     operate.fruit_goals_remain = fruit_goals
-    
+
     while start:
         operate.update_keyboard_L2()
         
