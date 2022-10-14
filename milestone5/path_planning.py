@@ -46,10 +46,10 @@ class DStarLite:
         Node(0, d, d),
         Node(-d, 0, d),
         Node(0, -d, d),
-        # Node(d, d, math.sqrt(2*(d**2))),
-        # Node(d, -d, math.sqrt(2*(d**2))),
-        # Node(-d, d, math.sqrt(2*(d**2))),
-        # Node(-d, -d, math.sqrt(2*(d**2)))
+        Node(d, d, math.sqrt(2*(d**2))),
+        Node(d, -d, math.sqrt(2*(d**2))),
+        Node(-d, d, math.sqrt(2*(d**2))),
+        Node(-d, -d, math.sqrt(2*(d**2)))
     ]
 
     def __init__(self, ox: list, oy: list):

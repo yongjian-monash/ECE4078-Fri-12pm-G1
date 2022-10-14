@@ -80,6 +80,9 @@ def apply_transform(theta, x, points):
     
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
+    print(R)
+    print(points)
+    print(x)
 
     points_transformed =  R @ points + x
     return points_transformed
@@ -98,7 +101,7 @@ def compute_rmse(points1, points2):
 
 def display_marker_rmse():
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
-    us_aruco = parse_user_map('lab_output/test.txt')
+    us_aruco = parse_user_map('lab_output/slam.txt')
 
     taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
     idx = np.argsort(taglist)
@@ -120,14 +123,17 @@ def display_marker_rmse():
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser("Matching the estimated map and the true map")
-    parser.add_argument("groundtruth", type=str, help="The ground truth file name.")
-    parser.add_argument("estimate", type=str, help="The estimate file name.")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser("Matching the estimated map and the true map")
+    # parser.add_argument("groundtruth", type=str, help="The ground truth file name.")
+    # parser.add_argument("estimate", type=str, help="The estimate file name.")
+    # args = parser.parse_args()
 
-    gt_aruco = parse_groundtruth(args.groundtruth)
-    us_aruco = parse_user_map(args.estimate)
 
+    # gt_aruco = parse_groundtruth(args.groundtruth)
+    # us_aruco = parse_user_map(args.estimate)
+    gt_aruco = parse_groundtruth('TRUEMAP.txt')
+    us_aruco = parse_user_map('lab_output/slam.txt')
+    
     taglist, us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
     idx = np.argsort(taglist)
     taglist = np.array(taglist)[idx]
@@ -136,11 +142,23 @@ if __name__ == '__main__':
 
     theta, x = solve_umeyama2d(us_vec, gt_vec)
     us_vec_aligned = apply_transform(theta, x, us_vec)
+    #print(us_vec_aligned[0])
     
     diff = gt_vec - us_vec_aligned
     rmse = compute_rmse(us_vec, gt_vec)
     rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)
     
+    # px, py = [], []
+    # px = us_vec_aligned[0]
+    # py = us_vec_aligned[1]
+
+    # d = {}
+    # for i in range(len(px)):
+    #     d['aruco' + str(i+1) + '_0'] = {'x': px[i], 'y':py[i]}
+        
+    # with open('testing_chris.txt', 'w') as f:
+    #     print(d, file=f)
+
     print()
     print("The following parameters optimally transform the estimated points to the ground truth.")
     print("Rotation Angle: {}".format(theta))
@@ -170,4 +188,6 @@ if __name__ == '__main__':
     ax.set_yticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
     plt.legend(['Real','Pred'])
     plt.grid()
+    #plt.savefig('pics/test_plot_markers.png')
     plt.show()
+    

@@ -175,6 +175,48 @@ def merge_estimations(target_map):
     ###########################################
         
     return target_est
+
+def read_true_map(fname):
+    """Read the ground truth map and output the pose of the ArUco markers and 3 types of target fruit to search
+
+    @param fname: filename of the map
+    @return:
+        1) list of target fruits, e.g. ['redapple', 'greenapple', 'orange']
+        2) locations of the target fruits, [[x1, y1], ..... [xn, yn]]
+        3) locations of ArUco markers in order, i.e. pos[9, :] = position of the aruco10_0 marker
+    """
+    with open(fname, 'r') as f:
+        try:
+            gt_dict = json.load(f)                   
+        except ValueError as e:
+            with open(fname, 'r') as f:
+                gt_dict = ast.literal_eval(f.readline())   
+        fruit_list = []
+        fruit_true_pos = []
+        aruco_true_pos = np.empty([10, 2])
+
+        # remove unique id of targets of the same type
+        for key in gt_dict:
+            x = np.round(gt_dict[key]['x'], 1)
+            y = np.round(gt_dict[key]['y'], 1)
+
+            if key.startswith('aruco'):
+                if key.startswith('aruco10'):
+                    aruco_true_pos[9][0] = x
+                    aruco_true_pos[9][1] = y
+                else:
+                    marker_id = int(key[5])
+                    aruco_true_pos[marker_id-1][0] = x
+                    aruco_true_pos[marker_id-1][1] = y
+            else:
+                fruit_list.append(key[:-2])
+                if len(fruit_true_pos) == 0:
+                    fruit_true_pos = np.array([[x, y]])
+                else:
+                    fruit_true_pos = np.append(fruit_true_pos, [[x, y]], axis=0)
+
+        return fruit_list, fruit_true_pos, aruco_true_pos
+
     
 def live_fruit_pose():
     fileK = "{}intrinsic.txt".format('./calibration/param/')
@@ -199,6 +241,59 @@ def live_fruit_pose():
     
     return target_est
 
+
+def live_fruit_pose_M5():
+    fileK = "{}intrinsic.txt".format('./calibration/param/')
+    camera_matrix = np.loadtxt(fileK, delimiter=',')
+    base_dir = Path('./')
+    
+    # a dictionary of all the saved detector outputs
+    image_poses = {}
+    with open(base_dir/'lab_output/images.txt') as fp:
+        for line in fp.readlines():
+            pose_dict = ast.literal_eval(line)
+            image_poses[pose_dict['imgfname']] = pose_dict['pose']
+            
+    # estimate pose of targets in each detector output
+    target_map = {}        
+    for file_path in image_poses.keys():
+        completed_img_dict = get_image_info(base_dir, file_path, image_poses)
+        target_map[file_path] = estimate_pose(base_dir, camera_matrix, completed_img_dict)
+        
+    # merge the estimations of the targets so that there are only one estimate for each target type
+    target_est = merge_estimations(target_map)
+
+    with open('testing_chris.txt', 'a') as fo: #append to exisiting txt file
+        json.dump(target_est, fo)
+
+
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris.txt')
+    taglist=[1,2,3,4,5,6,7,8,9,10]
+
+    ax = plt.gca()
+    for i in range(len(aruco_true_pos)):
+        p1 = ax.scatter(aruco_true_pos[i,0], aruco_true_pos[i,1], marker='x', color='C1', s=100)
+        ax.text(aruco_true_pos[i,0]+0.05, aruco_true_pos[i,1]+0.05, taglist[i], color='C1', size=12)
+
+    for i in range(len(fruit_true_pos)):
+        p2 = ax.scatter(fruit_true_pos[i,0], fruit_true_pos[i,1], marker='o', color='C2', s=100)
+        ax.text(fruit_true_pos[i,0]+0.05, fruit_true_pos[i,1]+0.05, fruit_list[i], color='C2', size=10)
+
+    plt.legend([p1, p2], ["Markers","Fruits"])
+
+    plt.title('Arena')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    ax.set_xticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
+    ax.set_yticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
+    plt.grid()
+    plt.show()   
+
+    
+
+
+    
+    
 
 if __name__ == "__main__":
     # camera_matrix = np.ones((3,3))/2

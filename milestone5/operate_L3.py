@@ -803,5 +803,5 @@ if __name__ == "__main__":
         
         # perform fruit search
         operate.auto_fruit_search(canvas)
-        # print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
 

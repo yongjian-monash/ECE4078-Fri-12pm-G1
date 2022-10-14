@@ -26,7 +26,8 @@ sys.path.insert(0,"{}/network/scripts".format(os.getcwd()))
 from network.scripts.detector import Detector
 
 # custom added
-import SLAM_eval
+import SLAM_eval_M5
+from TargetPoseEst import live_fruit_pose_M5
 
 class Operate:
     def __init__(self, args):
@@ -58,7 +59,9 @@ class Operate:
                         'output': False,
                         'save_inference': False,
                         'save_image': False,
-                        'output2': False}
+                        'output2': False,
+                        'evaluate': False,
+                        'save_fruits': False}
         self.quit = False
         self.pred_fname = ''
         self.request_recover_robot = False
@@ -178,10 +181,31 @@ class Operate:
         # custom function
         if self.command['output2']:
             self.output.write_map2(self.ekf)
-            SLAM_eval.display_marker_rmse()
+            SLAM_eval_M5.display_marker_rmse(self.ekf.robot.state)
             self.command['output2'] = False
 
-    # paint the GUI            
+        if self.command['evaluate']:
+            #SLAM_eval_M5.givecoord(self.ekf.robot.state)  #use this for final demo
+            SLAM_eval_M5.givecoord_test(self.ekf.robot.state)
+            self.update_plot(canvas)
+            self.command['evaluate'] = False
+
+        if self.command['save_fruits']:
+            live_fruit_pose_M5()
+            self.command['save_fruits'] = False
+
+    # paint the GUI
+    def update_plot(self,canvas):
+        v_pad = 40
+        h_pad = 20        
+        plot_markers = cv2.resize(cv2.imread(f'pics/test_plot_markers.png'),(640,480))
+        plot_markers = cv2.cvtColor(plot_markers,cv2.COLOR_BGR2RGB)
+        plot_markers = pygame.surfarray.make_surface(np.rot90(plot_markers))
+        plot_markers = pygame.transform.flip(plot_markers,True,False)
+        canvas.blit(plot_markers,(2*h_pad+320+350,60))
+
+        return canvas
+
     def draw(self, canvas):
         canvas.blit(self.bg, (0, 0))
         text_colour = (220, 220, 220)
@@ -204,6 +228,9 @@ class Operate:
                                 position=(h_pad, 240+2*v_pad)
                                 )
 
+
+
+
         # canvas.blit(self.gui_mask, (0, 0))
         self.put_caption(canvas, caption='SLAM', position=(2*h_pad+320, v_pad))
         self.put_caption(canvas, caption='Detector',
@@ -223,6 +250,9 @@ class Operate:
             time_remain = ""
         count_down_surface = TEXT_FONT.render(time_remain, False, (50, 50, 50))
         canvas.blit(count_down_surface, (2*h_pad+320+5, 530))
+
+
+
         return canvas
 
     @staticmethod
@@ -290,6 +320,13 @@ class Operate:
                         self.notification = 'SLAM is running'
                     else:
                         self.notification = 'SLAM is paused'
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                self.command['evaluate'] = True
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+                self.command['save_fruits'] = True
+
             # run object detector
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
@@ -325,7 +362,7 @@ if __name__ == "__main__":
     TITLE_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 35)
     TEXT_FONT = pygame.font.Font('pics/8-BitMadness.ttf', 40)
     
-    width, height = 700, 660
+    width, height = 1380, 660
     canvas = pygame.display.set_mode((width, height))
     pygame.display.set_caption('ECE4078 2021 Lab')
     pygame.display.set_icon(pygame.image.load('pics/8bit/pibot5.png'))
