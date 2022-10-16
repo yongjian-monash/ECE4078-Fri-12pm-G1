@@ -263,21 +263,34 @@ def live_fruit_pose_M5():
     # merge the estimations of the targets so that there are only one estimate for each target type
     target_est = merge_estimations(target_map)
 
-    with open('testing_chris.txt', 'a') as fo: #append to exisiting txt file
-        json.dump(target_est, fo)
+    #combining aruco list and fruit list
+    fruit_list_temp, fruit_true_pos_temp, aruco_true_pos_temp = read_true_map('testing_chris.txt')
+    d = {}
+    for i in range(len(aruco_true_pos_temp)):
+        d['aruco' + str(i+1) + '_0'] = {'x': aruco_true_pos_temp[i][0], 'y':aruco_true_pos_temp[i][1]}
+
+    d.update(target_est)
+    print(d)
+
+    with open('testing_chris2.txt', 'w') as f: #append to exisiting txt file
+        print(d, file=f)
 
 
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris2.txt')
     taglist=[1,2,3,4,5,6,7,8,9,10]
 
     ax = plt.gca()
+    p1=[]
+    p2=[]
     for i in range(len(aruco_true_pos)):
         p1 = ax.scatter(aruco_true_pos[i,0], aruco_true_pos[i,1], marker='x', color='C1', s=100)
         ax.text(aruco_true_pos[i,0]+0.05, aruco_true_pos[i,1]+0.05, taglist[i], color='C1', size=12)
 
+    print(fruit_true_pos)
     for i in range(len(fruit_true_pos)):
         p2 = ax.scatter(fruit_true_pos[i,0], fruit_true_pos[i,1], marker='o', color='C2', s=100)
         ax.text(fruit_true_pos[i,0]+0.05, fruit_true_pos[i,1]+0.05, fruit_list[i], color='C2', size=10)
+
 
     plt.legend([p1, p2], ["Markers","Fruits"])
 
@@ -288,7 +301,7 @@ def live_fruit_pose_M5():
     ax.set_yticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
     plt.grid()
     plt.show()   
-
+    plt.savefig('pics/test_plot_fruits.png')
     
 
 

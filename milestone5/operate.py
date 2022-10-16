@@ -180,25 +180,27 @@ class Operate:
             self.command['save_inference'] = False
         # custom function
         if self.command['output2']:
-            self.output.write_map2(self.ekf)
-            SLAM_eval_M5.display_marker_rmse(self.ekf.robot.state)
+            #self.output.write_map2(self.ekf)
+            #SLAM_eval_M5.display_marker_rmse(self.ekf.robot.state)
+            self.ekf.robot.state=0
             self.command['output2'] = False
 
         if self.command['evaluate']:
             #SLAM_eval_M5.givecoord(self.ekf.robot.state)  #use this for final demo
             SLAM_eval_M5.givecoord_test(self.ekf.robot.state)
-            self.update_plot(canvas)
+            self.update_plot(canvas,'pics/test_plot_markers.png')
             self.command['evaluate'] = False
 
         if self.command['save_fruits']:
             live_fruit_pose_M5()
+            self.update_plot(canvas,'pics/test_plot_fruits.png')
             self.command['save_fruits'] = False
 
     # paint the GUI
-    def update_plot(self,canvas):
+    def update_plot(self,canvas,file_name):
         v_pad = 40
         h_pad = 20        
-        plot_markers = cv2.resize(cv2.imread(f'pics/test_plot_markers.png'),(640,480))
+        plot_markers = cv2.resize(cv2.imread(f'{file_name}'),(640,480))
         plot_markers = cv2.cvtColor(plot_markers,cv2.COLOR_BGR2RGB)
         plot_markers = pygame.surfarray.make_surface(np.rot90(plot_markers))
         plot_markers = pygame.transform.flip(plot_markers,True,False)

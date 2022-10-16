@@ -405,9 +405,6 @@ def generate_points(fruit_goals, aruco_true_pos, fruit_true_pos):
             x = round_nearest(fruit_goals[i][0] + x_list[k], 0.2)
             y = round_nearest(fruit_goals[i][1] + y_list[k], 0.2)
 
-            print(f" x: {x}")
-            print(f" y: {y}")
-            
             if not (np.array([x, y]) == aruco_true_pos).all(1).any():
                 possible_goal.append(np.array([x, y]))
                 possible_angle.append(angle_list[k])
@@ -464,7 +461,7 @@ def generate_spoofed_obs(self, spoofed_obs):
 def main():
     print(__file__ + " start!!")
 
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris2.txt')
     search_list = read_search_list()
     
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
@@ -483,7 +480,7 @@ def main():
         temp = [[x/10.0,y/10.0] for x, y in zip(rx, ry)]
         waypoints_list.append(temp)
 
-    print(waypoints_list)
+    #print(waypoints_list)
 
     if show_animation:
 
