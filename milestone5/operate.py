@@ -338,11 +338,16 @@ class Operate:
             # quit
             elif event.type == pygame.QUIT:
                 self.quit = True
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
             # output RMSE during run
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
                 self.command['output2'] = True
+            # reset robot position
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_z:
+                self.ekf.robot.state[0] = 0
+                self.ekf.robot.state[1] = 0
+                self.ekf.robot.state[2] = 0
         if self.quit:
             pygame.quit()
             sys.exit()
