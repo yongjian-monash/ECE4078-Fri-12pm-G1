@@ -244,7 +244,7 @@ def givecoord_test(robot_pose): #for testing only, will plot ground truth and al
 
 def display_marker_rmse(robot_pose):
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
-    us_aruco = parse_user_map('lab_output/slam.txt')
+    us_aruco = parse_user_map('lab_output/test.txt')
 
     taglist, us_vec, gt_vec = match_aruco_points_test(us_aruco, gt_aruco)
     idx = np.argsort(taglist)

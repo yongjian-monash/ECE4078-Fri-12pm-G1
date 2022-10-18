@@ -180,9 +180,9 @@ class Operate:
             self.command['save_inference'] = False
         # custom function
         if self.command['output2']:
-            #self.output.write_map2(self.ekf)
-            #SLAM_eval_M5.display_marker_rmse(self.ekf.robot.state)
-            self.ekf.robot.state=0
+            self.output.write_map2(self.ekf)
+            SLAM_eval_M5.display_marker_rmse(self.ekf.robot.state)
+            # self.ekf.robot.state=0
             self.command['output2'] = False
 
         if self.command['evaluate']:
