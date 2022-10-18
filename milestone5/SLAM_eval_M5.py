@@ -104,6 +104,20 @@ def apply_transform(theta, x, points):
     points_transformed =  R @ points + x
     return points_transformed
 
+def apply_transform_custom(theta, x, points):
+    # Apply an SE(2) transform to a set of 2D points
+    assert(points.shape[0] == 2)
+    
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
+    print(R)
+    print(points)
+    print(x)
+    print(R@points)
+
+    points_transformed =  R @ (points + x)
+    return points_transformed
+
 def compute_rmse(points1, points2):
     # Compute the RMSE between two matched sets of 2D points.
     assert(points1.shape[0] == 2)
@@ -115,6 +129,17 @@ def compute_rmse(points1, points2):
 
     return np.sqrt(MSE)
 
+def solve_trans_rot(points1, points2):
+    # point_1 = robot_ekf
+    # point_2 = robot_cur
+
+    #print(points1)
+    print(points2[2])
+    theta = points1[2][0] - points2[2]
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
+    x = np.array([[points1[0][0]],[points1[1][0]]]) - R @ np.array([[points2[0]],[points2[1]]])
+    return theta, x
 
 def givecoord(robot_pose):
 
@@ -125,7 +150,7 @@ def givecoord(robot_pose):
     us_vec = us_vec[:,idx]
     x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
     theta = -robot_pose[2][0]
-    us_vec_aligned = apply_transform(theta, x, us_vec)
+    us_vec_aligned = apply_transform_custom(theta, x, us_vec)
 
     #exporting coordinates to txt file
     px, py = [], []
@@ -173,7 +198,7 @@ def givecoord(robot_pose):
 
 
 
-def givecoord_test(robot_pose): #for testing only, will plot ground truth and aligned aruco markers
+def givecoord_test(robot_ekf,robot_cur): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
     us_aruco = parse_user_map('lab_output/slam.txt')
@@ -187,9 +212,11 @@ def givecoord_test(robot_pose): #for testing only, will plot ground truth and al
     # theta, x = solve_umeyama2d(us_vec, gt_vec)
     # us_vec_aligned = apply_transform(theta, x, us_vec)
     
-    x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
-    theta = -robot_pose[2][0]
-    us_vec_aligned = apply_transform(theta, x, us_vec) #rmse after aligning using robot pose
+    #x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
+    #theta = -robot_pose[2][0]
+    theta, x = solve_trans_rot(robot_ekf, robot_cur)
+    us_vec_aligned = apply_transform_custom(theta, x, us_vec) #rmse after aligning using robot pose
+    
 
     diff = gt_vec - us_vec_aligned
     rmse = compute_rmse(us_vec, gt_vec) #rmse before any alignment
@@ -229,6 +256,8 @@ def givecoord_test(robot_pose): #for testing only, will plot ground truth and al
     for i in range(len(taglist)):
         ax.text(gt_vec[0,i]+0.05, gt_vec[1,i]+0.05, taglist[i], color='C0', size=12)
         ax.text(us_vec_aligned[0,i]+0.05, us_vec_aligned[1,i]+0.05, taglist[i], color='C1', size=12)
+        ax.text(us_vec[0,i]+0.05, us_vec[1,i]+0.05, taglist[i], color='C3', size=12)
+        ax.text(us_vec_gt_align[0,i]+0.05, us_vec_gt_align[1,i]+0.05, taglist[i], color='C4', size=12)
     plt.title('Arena')
     plt.xlabel('X')
     plt.ylabel('Y')
@@ -255,9 +284,9 @@ def display_marker_rmse(robot_pose):
     # theta, x = solve_umeyama2d(us_vec, gt_vec)
     # us_vec_aligned = apply_transform(theta, x, us_vec)
     
-    x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
-    theta = -robot_pose[2][0]
-    us_vec_aligned = apply_transform(theta, x, us_vec)
+    # x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
+    # theta = -robot_pose[2][0]
+    # us_vec_aligned = apply_transform(theta, x, us_vec)
 
     diff = gt_vec - us_vec_aligned
     rmse = compute_rmse(us_vec, gt_vec)

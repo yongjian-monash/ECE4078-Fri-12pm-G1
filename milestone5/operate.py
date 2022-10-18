@@ -167,6 +167,10 @@ class Operate:
         if self.command['output']:
             self.output.write_map(self.ekf)
             self.notification = 'Map is saved'
+            self.current_robot_pose = self.getting_robot_pose()
+            SLAM_eval_M5.givecoord_test(self.ekf.robot.state,self.current_robot_pose)
+
+            self.update_plot(canvas,'pics/test_plot_markers.png')
             self.command['output'] = False
         # save inference with the matching robot pose and detector labels
         if self.command['save_inference']:
@@ -195,6 +199,31 @@ class Operate:
             live_fruit_pose_M5()
             self.update_plot(canvas,'pics/test_plot_fruits.png')
             self.command['save_fruits'] = False
+
+    def getting_robot_pose(self):
+        while True:
+            x,y,rad = 0.0,0.0,0.0
+            x = input("X coordinate of the robot at final position: ")
+            try:
+                x = float(x)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            y = input("Y coordinate of the robot at final position: ")
+            try:
+                y = float(y)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            rad = input("Angle (rad) of the robot at final position: ")
+            try:
+                rad = float(rad)
+            except ValueError:
+                print("Please enter a number.")
+                continue
+            break
+        robot_pose = np.hstack([x, y, rad])
+        return robot_pose
 
     # paint the GUI
     def update_plot(self,canvas,file_name):
