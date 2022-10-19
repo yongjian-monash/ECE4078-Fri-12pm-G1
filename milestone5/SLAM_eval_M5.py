@@ -116,9 +116,13 @@ def solve_trans_rot(points1, points2):
     x = np.array([[points2[0][0]],[points2[1][0]]]) - R @ np.array([[points1[0]],[points1[1]]])
     return theta, x
 
-def apply_transform_custom(theta, x, points):
+def apply_transform_custom(theta, x, points, offset_rot = 0, offset_x = 0, offset_y = 0):
     # Apply an SE(2) transform to a set of 2D points
     assert(points.shape[0] == 2)
+    
+    theta += offset_rot
+    x[0,0] += offset_x
+    x[1,0] += offset_y
     
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
@@ -193,11 +197,20 @@ def givecoord(robot_pose):
     plt.close()
     plt.savefig('pics/test_plot_markers.png')
 
-def givecoord_test(robot_ekf,robot_cur): #for testing only, will plot ground truth and aligned aruco markers
+def save(markers, fname="slam_aligned.txt"):
+    base_dir = Path('./')
+    d = {}
+    for i in range(10):
+        d['aruco' + str(i+1) + '_0'] = {'x': round(markers[0][i], 1), 'y':round(markers[1][i], 1)}
+    map_attributes = d
+    with open(base_dir/fname,'w') as map_file:
+        json.dump(map_attributes, map_file, indent=2)
+
+def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y = 0): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
     us_aruco = parse_user_map('lab_output/slam.txt')
-
+    
     taglist, us_vec, gt_vec = match_aruco_points_test(us_aruco, gt_aruco)
     idx = np.argsort(taglist)
     taglist = np.array(taglist)[idx]
@@ -211,8 +224,8 @@ def givecoord_test(robot_ekf,robot_cur): #for testing only, will plot ground tru
     #theta = -robot_pose[2][0]
     
     theta, x = solve_trans_rot(robot_cur, robot_ekf)
-    us_vec_aligned = apply_transform_custom(-theta, -x, us_vec) #rmse after aligning using robot pose
-    
+    us_vec_aligned = apply_transform_custom(-theta, -x, us_vec, offset_rot, offset_x, offset_y) #rmse after aligning using robot pose
+    save(us_vec_aligned)
 
     diff = gt_vec - us_vec_aligned
     rmse = compute_rmse(us_vec, gt_vec) #rmse before any alignment
