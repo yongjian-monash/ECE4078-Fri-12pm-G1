@@ -492,6 +492,7 @@ if __name__ == "__main__":
         pygame.display.update()
         angle = operate.ekf.robot.state[2][0]
         angle = angle*180/np.pi
+        angle = angle % 360
         #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
         print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 

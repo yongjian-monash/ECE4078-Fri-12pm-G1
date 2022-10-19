@@ -120,7 +120,7 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
 # merge the estimations of the targets so that there are at most 1 estimate for each target type
 def merge_estimations(target_map):
     target_map = target_map
-    redapple_est, greenapple_est, orange_est, mango_est, capsicum_est = [], [], [], [], []
+    redapple_est, greenapple_est, orange_est, mango_est, capsicum_est = [0], [0], [0], [0], [0]
     target_est = {}
     num_per_target = 1 # max number of units per target type. We are only use 1 unit per fruit type
     # combine the estimations from multiple detector outputs
@@ -140,36 +140,39 @@ def merge_estimations(target_map):
     ######### Replace with your codes #########
     # TODO: the operation below is the default solution, which simply takes the first estimation for each target type.
     # Replace it with a better merge solution.
+    print(f"Before: {orange_est}")
     if len(redapple_est) > num_per_target:
-        redapple_est = redapple_est[0:num_per_target]
+        redapple_est = redapple_est[-1]
     if len(greenapple_est) > num_per_target:
-        greenapple_est = greenapple_est[0:num_per_target]
+        greenapple_est = greenapple_est[-1]
     if len(orange_est) > num_per_target:
-        orange_est = orange_est[0:num_per_target]
+        orange_est = orange_est[-1]
     if len(mango_est) > num_per_target:
-        mango_est = mango_est[0:num_per_target]
+        mango_est = mango_est[-1]
     if len(capsicum_est) > num_per_target:
-        capsicum_est = capsicum_est[0:num_per_target]
+        capsicum_est = capsicum_est[-1]
+
+    print(f"After: {orange_est}")
 
     for i in range(num_per_target):
         try:
-            target_est['redapple_'+str(i)] = {'x':redapple_est[i][0], 'y':redapple_est[i][1]}
+            target_est['redapple_'+str(i)] = {'x':redapple_est[0], 'y':redapple_est[1]}
         except:
             pass
         try:
-            target_est['greenapple_'+str(i)] = {'x':greenapple_est[i][0], 'y':greenapple_est[i][1]}
+            target_est['greenapple_'+str(i)] = {'x':greenapple_est[0], 'y':greenapple_est[1]}
         except:
             pass
         try:
-            target_est['orange_'+str(i)] = {'x':orange_est[i][0], 'y':orange_est[i][1]}
+            target_est['orange_'+str(i)] = {'x':orange_est[0], 'y':orange_est[1]}
         except:
             pass
         try:
-            target_est['mango_'+str(i)] = {'x':mango_est[i][0], 'y':mango_est[i][1]}
+            target_est['mango_'+str(i)] = {'x':mango_est[0], 'y':mango_est[1]}
         except:
             pass
         try:
-            target_est['capsicum_'+str(i)] = {'x':capsicum_est[i][0], 'y':capsicum_est[i][1]}
+            target_est['capsicum_'+str(i)] = {'x':capsicum_est[0], 'y':capsicum_est[1]}
         except:
             pass
     ###########################################
@@ -262,6 +265,7 @@ def live_fruit_pose_M5():
         
     # merge the estimations of the targets so that there are only one estimate for each target type
     target_est = merge_estimations(target_map)
+    print(f"Test: {target_est}")
 
     #combining aruco list and fruit list
     fruit_list_temp, fruit_true_pos_temp, aruco_true_pos_temp = read_true_map('slam_aligned.txt')
@@ -279,7 +283,9 @@ def live_fruit_pose_M5():
     fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     taglist=[1,2,3,4,5,6,7,8,9,10]
 
+    plt.close()
     ax = plt.gca()
+
     p1=[]
     p2=[]
     for i in range(len(aruco_true_pos)):
@@ -302,6 +308,7 @@ def live_fruit_pose_M5():
     plt.grid()
     plt.show()   
     plt.savefig('pics/test_plot_fruits.png')
+    
     
 
 

@@ -351,8 +351,8 @@ class Operate:
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
                 self.command['save_image'] = True
             # save SLAM map
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                self.command['output'] = True
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+            #     self.command['output'] = True
             # reset SLAM map
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 if self.double_reset_comfirm == 0:
@@ -476,7 +476,7 @@ if __name__ == "__main__":
         pygame.display.update()
         angle = operate.ekf.robot.state[2][0]
         angle = angle*180/np.pi
-
+        angle = angle % 360
         #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
         print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 

@@ -273,6 +273,7 @@ def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y 
     ax.set_xticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
     ax.set_yticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
     plt.legend(['Real','after align','before align','gt align'])
+    #plt.legend(['after align','before align','gt align'])
     plt.grid()
     plt.savefig('pics/test_plot_markers.png')
     plt.close()
