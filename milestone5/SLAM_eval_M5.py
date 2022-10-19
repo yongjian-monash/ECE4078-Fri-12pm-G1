@@ -103,6 +103,18 @@ def apply_transform(theta, x, points):
 
     points_transformed =  R @ points + x
     return points_transformed
+    
+def solve_trans_rot(points1, points2):
+    # points_1 = robot_cur (Real)
+    # points_2 = robot_ekf (SLAM)
+
+    #print(points1)
+    print(points2[2])
+    theta =  points2[2] - points1[2][0]
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
+    x = np.array([[points2[0][0]],[points2[1][0]]]) - R @ np.array([[points1[0]],[points1[1]]])
+    return theta, x
 
 def apply_transform_custom(theta, x, points):
     # Apply an SE(2) transform to a set of 2D points
@@ -128,18 +140,6 @@ def compute_rmse(points1, points2):
     MSE = 1.0/num_points * np.sum(residual**2)
 
     return np.sqrt(MSE)
-
-def solve_trans_rot(points1, points2):
-    # point_1 = robot_ekf
-    # point_2 = robot_cur
-
-    #print(points1)
-    print(points2[2])
-    theta = points1[2][0] - points2[2]
-    c, s = np.cos(theta), np.sin(theta)
-    R = np.array(((c, -s), (s, c)))
-    x = np.array([[points1[0][0]],[points1[1][0]]]) - R @ np.array([[points2[0]],[points2[1]]])
-    return theta, x
 
 def givecoord(robot_pose):
 
@@ -193,11 +193,6 @@ def givecoord(robot_pose):
     plt.close()
     plt.savefig('pics/test_plot_markers.png')
 
-
-
-
-
-
 def givecoord_test(robot_ekf,robot_cur): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
@@ -214,8 +209,9 @@ def givecoord_test(robot_ekf,robot_cur): #for testing only, will plot ground tru
     
     #x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
     #theta = -robot_pose[2][0]
-    theta, x = solve_trans_rot(robot_ekf, robot_cur)
-    us_vec_aligned = apply_transform_custom(theta, x, us_vec) #rmse after aligning using robot pose
+    
+    theta, x = solve_trans_rot(robot_cur, robot_ekf)
+    us_vec_aligned = apply_transform_custom(-theta, -x, us_vec) #rmse after aligning using robot pose
     
 
     diff = gt_vec - us_vec_aligned
@@ -294,8 +290,6 @@ def display_marker_rmse(robot_pose):
     print(f"RMSE error: {rmse_aligned}")
 
     return rmse_aligned
-
-
 
 if __name__ == '__main__':
     import argparse

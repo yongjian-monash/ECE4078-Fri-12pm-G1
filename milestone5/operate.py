@@ -215,9 +215,10 @@ class Operate:
             except ValueError:
                 print("Please enter a number.")
                 continue
-            rad = input("Angle (rad) of the robot at final position: ")
+            deg = input("Angle (degrees) of the robot at final position: ")
             try:
-                rad = float(rad)
+                deg = float(deg)
+                rad = deg*np.pi/180
             except ValueError:
                 print("Please enter a number.")
                 continue
