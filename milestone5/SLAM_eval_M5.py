@@ -127,7 +127,7 @@ def apply_transform_custom(theta, x, points):
     print(x)
     print(R@points)
 
-    points_transformed =  R @ (points + x)
+    points_transformed =  R @ points + x
     return points_transformed
 
 def compute_rmse(points1, points2):
