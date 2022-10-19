@@ -264,7 +264,7 @@ def live_fruit_pose_M5():
     target_est = merge_estimations(target_map)
 
     #combining aruco list and fruit list
-    fruit_list_temp, fruit_true_pos_temp, aruco_true_pos_temp = read_true_map('testing_chris.txt')
+    fruit_list_temp, fruit_true_pos_temp, aruco_true_pos_temp = read_true_map('slam_aligned.txt')
     d = {}
     for i in range(len(aruco_true_pos_temp)):
         d['aruco' + str(i+1) + '_0'] = {'x': aruco_true_pos_temp[i][0], 'y':aruco_true_pos_temp[i][1]}
@@ -272,11 +272,11 @@ def live_fruit_pose_M5():
     d.update(target_est)
     print(d)
 
-    with open('testing_chris2.txt', 'w') as f: #append to exisiting txt file
+    with open('aruco_fruit_final.txt', 'w') as f: #append to exisiting txt file
         print(d, file=f)
 
 
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris2.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     taglist=[1,2,3,4,5,6,7,8,9,10]
 
     ax = plt.gca()

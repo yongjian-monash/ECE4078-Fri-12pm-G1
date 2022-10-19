@@ -382,7 +382,7 @@ class Operate:
                     else:
                         self.notification = 'SLAM is paused'
                 lms = []
-                aruco_true_pos=self.read_true_map_aruco('testing_chris.txt')
+                aruco_true_pos=self.read_true_map_aruco('slam_aligned.txt')
                 for i,lm in enumerate(aruco_true_pos):
                     measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
                     lms.append(measure_lm)
@@ -474,7 +474,11 @@ if __name__ == "__main__":
         # visualise
         operate.draw(canvas)
         pygame.display.update()
-        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        angle = operate.ekf.robot.state[2][0]
+        angle = angle*180/np.pi
+
+        #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
+        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 
 
 

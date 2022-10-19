@@ -198,12 +198,12 @@ def givecoord(robot_pose):
     plt.savefig('pics/test_plot_markers.png')
 
 def save(markers, fname="slam_aligned.txt"):
-    base_dir = Path('./')
+    # base_dir = Path('./')
     d = {}
     for i in range(10):
         d['aruco' + str(i+1) + '_0'] = {'x': round(markers[0][i], 1), 'y':round(markers[1][i], 1)}
     map_attributes = d
-    with open(base_dir/fname,'w') as map_file:
+    with open(fname,'w') as map_file:
         json.dump(map_attributes, map_file, indent=2)
 
 def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y = 0): #for testing only, will plot ground truth and aligned aruco markers

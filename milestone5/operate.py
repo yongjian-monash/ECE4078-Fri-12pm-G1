@@ -61,9 +61,9 @@ class Operate:
                         'save_image': False,
                         'output2': False,
                         'evaluate': False,
-                        'save_fruits': False
-                        'offset_mode': False
-                        'offset_plus': False
+                        'save_fruits': False,
+                        'offset_mode': False,
+                        'offset_plus': False,
                         'offset_minus': False}
         self.quit = False
         self.pred_fname = ''
@@ -214,22 +214,22 @@ class Operate:
             if self.offset_mode > 3:
                 self.offset_mode = 1
                 
-            if self.offset_mode = 1:
+            if self.offset_mode == 1:
                 self.notification = f'Rotation offset'
-            else if self.offset_mode = 2:
+            elif self.offset_mode == 2:
                 self.notification = f'Trans_x offset'
-            else if self.offset_mode = 3:
+            elif self.offset_mode == 3:
                 self.notification = f'Trans_y offset'
                 
             self.command['offset_mode'] = False
                 
         if self.command['offset_plus']: # increase offset
-            if self.offset_mode = 1:
+            if self.offset_mode == 1:
                 self.offset_rot += 5*np.pi/180
-            else if self.offset_mode = 2:
-                self.trans_x += 0.1
-            else if self.offset_mode = 3:
-                self.trans_y += 0.1
+            elif self.offset_mode == 2:
+                self.offset_trans_x += 0.1
+            elif self.offset_mode == 3:
+                self.offset_trans_y += 0.1
                 
             SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
             self.update_plot(canvas,'pics/test_plot_markers.png')
@@ -237,12 +237,12 @@ class Operate:
             self.command['offset_plus'] = False
                 
         if self.command['offset_minus']: # decrease offset
-            if self.offset_mode = 1:
+            if self.offset_mode == 1:
                 self.offset_rot -= 5*np.pi/180
-            else if self.offset_mode = 2:
-                self.trans_x -= 0.1
-            else if self.offset_mode = 3:
-                self.trans_y -= 0.1
+            elif self.offset_mode == 2:
+                self.offset_trans_x -= 0.1
+            elif self.offset_mode == 3:
+                self.offset_trans_y -= 0.1
                 
             SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
             self.update_plot(canvas,'pics/test_plot_markers.png')
@@ -490,7 +490,10 @@ if __name__ == "__main__":
         # visualise
         operate.draw(canvas)
         pygame.display.update()
-        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        angle = operate.ekf.robot.state[2][0]
+        angle = angle*180/np.pi
+        #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
+        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 
 
 
