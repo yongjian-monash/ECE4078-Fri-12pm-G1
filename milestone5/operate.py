@@ -61,7 +61,10 @@ class Operate:
                         'save_image': False,
                         'output2': False,
                         'evaluate': False,
-                        'save_fruits': False}
+                        'save_fruits': False
+                        'offset_mode': False
+                        'offset_plus': False
+                        'offset_minus': False}
         self.quit = False
         self.pred_fname = ''
         self.request_recover_robot = False
@@ -90,6 +93,11 @@ class Operate:
         self.network_vis = np.ones((240, 320,3))* 100
         
         self.bg = pygame.image.load('pics/gui_mask.jpg')
+        
+        self.offset_mode = 0 # 1 - rotation, 2 - translation x, 3 - translation y
+        self.offset_rot = 0
+        self.offset_trans_x = 0
+        self.offset_trans_y = 0
 
     # wheel control
     def control(self):       
@@ -168,6 +176,7 @@ class Operate:
             self.output.write_map(self.ekf)
             self.notification = 'Map is saved'
             self.current_robot_pose = self.getting_robot_pose()
+            self.current_slam_pose = self.ekf.robot.state
             SLAM_eval_M5.givecoord_test(self.ekf.robot.state,self.current_robot_pose)
 
             self.update_plot(canvas,'pics/test_plot_markers.png')
@@ -189,16 +198,57 @@ class Operate:
             # self.ekf.robot.state=0
             self.command['output2'] = False
 
-        if self.command['evaluate']:
-            #SLAM_eval_M5.givecoord(self.ekf.robot.state)  #use this for final demo
-            SLAM_eval_M5.givecoord_test(self.ekf.robot.state)
-            self.update_plot(canvas,'pics/test_plot_markers.png')
-            self.command['evaluate'] = False
+        # if self.command['evaluate']:
+            # #SLAM_eval_M5.givecoord(self.ekf.robot.state)  #use this for final demo
+            # SLAM_eval_M5.givecoord_test(self.ekf.robot.state)
+            # self.update_plot(canvas,'pics/test_plot_markers.png')
+            # self.command['evaluate'] = False
 
         if self.command['save_fruits']:
             live_fruit_pose_M5()
             self.update_plot(canvas,'pics/test_plot_fruits.png')
             self.command['save_fruits'] = False
+            
+        if self.command['offset_mode']: # toggle offset mode
+            self.offset_mode += 1
+            if self.offset_mode > 3:
+                self.offset_mode = 1
+                
+            if self.offset_mode = 1:
+                self.notification = f'Rotation offset'
+            else if self.offset_mode = 2:
+                self.notification = f'Trans_x offset'
+            else if self.offset_mode = 3:
+                self.notification = f'Trans_y offset'
+                
+            self.command['offset_mode'] = False
+                
+        if self.command['offset_plus']: # increase offset
+            if self.offset_mode = 1:
+                self.offset_rot += 5*np.pi/180
+            else if self.offset_mode = 2:
+                self.trans_x += 0.1
+            else if self.offset_mode = 3:
+                self.trans_y += 0.1
+                
+            SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
+            self.update_plot(canvas,'pics/test_plot_markers.png')
+    
+            self.command['offset_plus'] = False
+                
+        if self.command['offset_minus']: # decrease offset
+            if self.offset_mode = 1:
+                self.offset_rot -= 5*np.pi/180
+            else if self.offset_mode = 2:
+                self.trans_x -= 0.1
+            else if self.offset_mode = 3:
+                self.trans_y -= 0.1
+                
+            SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
+            self.update_plot(canvas,'pics/test_plot_markers.png')
+                
+            self.command['offset_minus'] = False
+
 
     def getting_robot_pose(self):
         while True:
@@ -370,14 +420,15 @@ class Operate:
                 self.quit = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
-            # output RMSE during run
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
-                self.command['output2'] = True
-            # reset robot position
+            # # output RMSE during run
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                # self.command['output2'] = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_z:
-                self.ekf.robot.state[0] = 0
-                self.ekf.robot.state[1] = 0
-                self.ekf.robot.state[2] = 0
+                self.command['offset_mode'] = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+                self.command['offset_plus'] = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                self.command['offset_minus'] = True
         if self.quit:
             pygame.quit()
             sys.exit()
