@@ -110,7 +110,7 @@ def solve_trans_rot(points1, points2):
 
     #print(points1)
     print(points2[2])
-    theta =  points2[2] - points1[2][0]
+    theta =  points2[2][0] - points1[2]
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
     x = np.array([[points2[0][0]],[points2[1][0]]]) - R @ np.array([[points1[0]],[points1[1]]])
