@@ -299,7 +299,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     n_fruit = 1
     fruit_goals = []
     for fruit in search_list:
-        for i in range(3):
+        for i in range(5):
             if fruit == fruit_list[i]:
                 x = np.round(fruit_true_pos[i][0], 1)
                 y = np.round(fruit_true_pos[i][1], 1)
@@ -461,7 +461,7 @@ def generate_spoofed_obs(self, spoofed_obs):
 def main():
     print(__file__ + " start!!")
 
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('testing_chris2.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     search_list = read_search_list()
     
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)

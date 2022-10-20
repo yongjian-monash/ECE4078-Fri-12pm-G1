@@ -780,7 +780,7 @@ if __name__ == "__main__":
             counter += 2
 
     operate = Operate(args)
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
     operate.fruit_goals_remain = fruit_goals
@@ -804,5 +804,9 @@ if __name__ == "__main__":
         
         # perform fruit search
         operate.auto_fruit_search(canvas)
-        # print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        angle = operate.ekf.robot.state[2][0]
+        angle = angle*180/np.pi
+        angle = angle % 360
+        #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
+        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 
