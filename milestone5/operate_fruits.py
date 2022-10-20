@@ -384,7 +384,7 @@ class Operate:
                 lms = []
                 aruco_true_pos=self.read_true_map_aruco('slam_aligned.txt')
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.1*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.00001*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)
 
