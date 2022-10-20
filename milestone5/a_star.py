@@ -325,7 +325,7 @@ def astar_generate(fruit_obs,aruco_obs):
     # gx = 50.0  # [m]
     # gy = 50.0  # [m]
     grid_size = 1.0  # [m]
-    robot_radius = 1.0  # [m]
+    robot_radius = 0.5  # [m]
 
     # set obstacle positions
     ox, oy = [], []
