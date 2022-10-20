@@ -221,7 +221,7 @@ def save(markers, fname="slam_aligned.txt"):
     with open(fname,'w') as map_file:
         json.dump(map_attributes, map_file, indent=2)
 
-def evaluate(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y = 0): #for testing only, will plot ground truth and aligned aruco markers
+def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y = 0): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
     us_aruco = parse_user_map('lab_output/slam.txt')
