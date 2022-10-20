@@ -396,7 +396,7 @@ def generate_points_L2(fruit_goals, aruco_true_pos, obstacles):
         possible_goal = []
         possible_angle = []
         
-        # start from north, in 8 compass position away from goal
+        # # start from north, in 8 compass position away from goal
         d = 0.2 # distance from goal
         x_list = [-d, -d, 0, d, d, d, 0, -d]
         y_list = [0, -d, -d, -d, 0, d, d, d]
@@ -408,10 +408,18 @@ def generate_points_L2(fruit_goals, aruco_true_pos, obstacles):
         # y_list = [0, -d, 0, d]
         # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
         
+        # # start from north, in 16 compass position away from goal
+        # d = 0.2 # distance from goal
+        # s = 0.1
+        # x_list = [-d, -d, 0, d, d, d, 0, -d, -d, -d+s, s, d, d, d-s, -s, -d]
+        # y_list = [0, -d, -d, -d, 0, d, d, d, -s, -d, -d, -d+s, s, d, d, d-s]
+        # angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi, 0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+        
         for k in range(len(x_list)):
             x = round_nearest(fruit_goals[i][0] + x_list[k], 0.1)
             y = round_nearest(fruit_goals[i][1] + y_list[k], 0.1)
             
+            # if not (np.array([x, y]) == aruco_true_pos).all(1).any() and not (np.array([x, y]) == obstacles).all(1).any() and (int(x*10)%2) == 0 and (int(y*10)%2) == 0:
             if not (np.array([x, y]) == aruco_true_pos).all(1).any() and not (np.array([x, y]) == obstacles).all(1).any():
                 possible_goal.append(np.array([x, y]))
                 possible_angle.append(angle_list[k])
@@ -448,11 +456,13 @@ def generate_points_L3(curr_pos, fruit_goals_remain, aruco_true_pos, spoofed_obs
         possible_goal = []
         possible_angle = []
         
-        # start from north, in 8 compass position away from goal
-        d = 0.2 # distance from goal
-        x_list = [-d, -d, 0, d, d, d, 0, -d]
-        y_list = [0, -d, -d, -d, 0, d, d, d]
-        angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+        # # start from north, in 8 compass position away from goal
+        # d = 0.2 # distance from goal
+        # x_list = [-d, -d, 0, d, d, d, 0, -d]
+        # y_list = [0, -d, -d, -d, 0, d, d, d]
+        # angle_list = [0, 0.25*np.pi, 0.50*np.pi, 0.75*np.pi, 1.00*np.pi, -0.75*np.pi, -0.50*np.pi, -0.25*np.pi]
+        
+        
         
         # # start from north, in 4 compass position away from goal
         # d = 0.2 # distance from goal
