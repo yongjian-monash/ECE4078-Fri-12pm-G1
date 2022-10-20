@@ -111,10 +111,10 @@ def apply_transform(theta, x, points):
     
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
-    print(R)
-    print(points)
-    print(x)
-    print(R@points)
+    # print(R)
+    # print(points)
+    # print(x)
+    # print(R@points)
 
     points_transformed =  R @ points + x
     return points_transformed
@@ -141,10 +141,10 @@ def apply_transform_custom(theta, x, points, offset_rot = 0, offset_x = 0, offse
     
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
-    print(R)
-    print(points)
-    print(x)
-    print(R@points)
+    # print(R)
+    # print(points)
+    # print(x)
+    # print(R@points)
 
     points_transformed =  R @ (points + x)
     return points_transformed
