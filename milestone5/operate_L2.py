@@ -455,7 +455,7 @@ class Operate:
             pygame.display.update()
         
     # rotate robot to scan landmarks
-    def rotate_robot(self, num_turns=8):
+    def rotate_robot(self, num_turns=4):
         # imports camera / wheel calibration parameters 
         fileS = "calibration/param/scale.txt"
         scale = np.loadtxt(fileS, delimiter=',')
@@ -468,7 +468,7 @@ class Operate:
         if(num_turns==8):
             turn_offset=0.024
         elif num_turns==12:
-            turn_offset=0.03
+            turn_offset=0.035
 
         turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + turn_offset
         
@@ -625,5 +625,9 @@ if __name__ == "__main__":
         
         # perform fruit search
         operate.auto_fruit_search(canvas)
-        print(f"Position: {operate.ekf.robot.state.squeeze().tolist()}")
+        angle = operate.ekf.robot.state[2][0]
+        angle = angle*180/np.pi
+        angle = angle % 360
+        #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
+        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 

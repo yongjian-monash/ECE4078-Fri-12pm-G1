@@ -56,7 +56,7 @@ def rotate_robot(ppi, num_turns=8):
     wheel_vel = 20 # tick to move the robot
     
     turn_resolution = 2*np.pi/num_turns
-    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.03
+    turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel) + 0.035
     print(turn_time)
     
     for _ in range(num_turns):
@@ -87,23 +87,23 @@ if __name__ == "__main__":
 
         rotate_robot(ppi, steps)
 
-    while True:
-        turn_diff,pos_diff = 0.0,0.0
-        turn_diff = input("Turning angle: ")
-        try:
-            turn_diff = float(turn_diff)
-        except ValueError:
-            print("Please enter a number.")
-            continue
-        pos_diff = input("Distance: ")
-        try:
-            pos_diff = float(pos_diff)
-        except ValueError:
-            print("Please enter a number.")
-            continue
+    # while True:
+    #     turn_diff,pos_diff = 0.0,0.0
+    #     turn_diff = input("Turning angle: ")
+    #     try:
+    #         turn_diff = float(turn_diff)
+    #     except ValueError:
+    #         print("Please enter a number.")
+    #         continue
+    #     pos_diff = input("Distance: ")
+    #     try:
+    #         pos_diff = float(pos_diff)
+    #     except ValueError:
+    #         print("Please enter a number.")
+    #         continue
 
-        # robot drives to the waypoint
-        drive_to_point(ppi,turn_diff,pos_diff)
+    #     # robot drives to the waypoint
+    #     drive_to_point(ppi,turn_diff,pos_diff)
 
         # # exit
         # operate.pibot.set_velocity([0, 0])
