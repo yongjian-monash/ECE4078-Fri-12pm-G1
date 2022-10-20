@@ -63,8 +63,8 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser("Matching the estimated map and the true map")
-    parser.add_argument("truth", type=str, help="The ground truth file name.")
-    parser.add_argument("est", type=str, help="The estimate file name.")
+    parser.add_argument("truth", type=str, help="The ground truth file name.", default='')
+    parser.add_argument("est", type=str, help="The estimate file name.", default='localhost')
     args, _ = parser.parse_known_args()
 
     # read in ground truth and estimations
