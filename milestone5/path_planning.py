@@ -385,7 +385,7 @@ def generate_obstacles(fruit_true_pos, aruco_true_pos):
     
     return ox, oy
 
-def generate_points_L2(fruit_goals, aruco_true_pos):
+def generate_points_L2(fruit_goals, aruco_true_pos, obstacles):
     sx = np.array([0])
     sy = np.array([0])
     new_goal = np.zeros(fruit_goals.shape)
@@ -412,7 +412,7 @@ def generate_points_L2(fruit_goals, aruco_true_pos):
             x = round_nearest(fruit_goals[i][0] + x_list[k], 0.1)
             y = round_nearest(fruit_goals[i][1] + y_list[k], 0.1)
             
-            if not (np.array([x, y]) == aruco_true_pos).all(1).any():
+            if not (np.array([x, y]) == aruco_true_pos).all(1).any() and not (np.array([x, y]) == obstacles).all(1).any():
                 possible_goal.append(np.array([x, y]))
                 possible_angle.append(angle_list[k])
 
@@ -900,10 +900,9 @@ def new_main():
     ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
     dstarlite = DStarLite(ox, oy)
     
-    sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
-    # print(gx)
-    # print(gy)
-    
+    obstacles = [[x/10.0, y/10.0] for x, y in zip(ox, oy)]
+    sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos, obstacles)
+
     if show_animation:
         plt.figure(figsize=(4.8,4.8))
         plt.plot(ox, oy, ".k")

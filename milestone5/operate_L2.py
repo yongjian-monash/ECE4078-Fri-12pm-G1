@@ -319,7 +319,8 @@ class Operate:
         ox, oy = generate_obstacles(fruit_true_pos, aruco_true_pos)
         self.path_planning = DStarLite(ox, oy)
         
-        sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos)
+        obstacles = [[x/10.0, y/10.0] for x, y in zip(ox, oy)]
+        sx, sy, gx, gy, fx, fy, face_angle = generate_points_L2(fruit_goals, aruco_true_pos, obstacles)
         
         self.waypoints_list = []
         for i in range(len(sx)):
