@@ -34,6 +34,21 @@ def parse_user_map(fname : str) -> dict:
         for (i, tag) in enumerate(usr_dict["taglist"]):
             aruco_dict[tag] = np.reshape([usr_dict["map"][0][i],usr_dict["map"][1][i]], (2,1))
     return aruco_dict
+    
+def parse_generated_gt(fname : str) -> dict:
+    with open(fname, 'r') as f:
+        try:
+            gt_dict = json.load(f)                   
+        except ValueError as e:
+            with open(fname, 'r') as f:
+                gt_dict = ast.literal_eval(f.readline()) 
+        
+        aruco_dict = {}
+        for key in gt_dict:
+            if key.startswith("aruco"):
+                aruco_num = int(key.strip('aruco')[:-2])
+                aruco_dict[aruco_num] = np.reshape([gt_dict[key]["x"], gt_dict[key]["y"]], (2,1))
+    return aruco_dict
 
 def match_aruco_points(aruco0 : dict):
     points0 = []
@@ -283,7 +298,7 @@ def evaluate(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y = 0): 
 def evaluate_after(): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
-    us_aruco = parse_user_map('slam_aligned.txt')
+    us_aruco = parse_generated_gt('slam_aligned.txt')
     
     taglist, us_vec_aligned, gt_vec = match_aruco_points_test(us_aruco, gt_aruco)
     idx = np.argsort(taglist)
@@ -292,7 +307,7 @@ def evaluate_after(): #for testing only, will plot ground truth and aligned aruc
     gt_vec = gt_vec[:, idx]
 
     diff = gt_vec - us_vec_aligned
-    rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)   #rmse after aligning using ground truth
+    rmse_aligned = compute_rmse(us_vec_aligned, gt_vec) 
 
     theta_gt, x_gt = solve_umeyama2d(us_vec_aligned, gt_vec)
     us_vec_gt_align = apply_transform(theta_gt, x_gt, us_vec_aligned)
