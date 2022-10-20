@@ -221,14 +221,16 @@ class AStarPlanner:
     @staticmethod
     def get_motion_model():
         # dx, dy, cost
-        motion = [[1, 0, 1],
-                  [0, 1, 1],
-                  [-1, 0, 1],
-                  [0, -1, 1],
-                  [-1, -1, math.sqrt(2)],
-                  [-1, 1, math.sqrt(2)],
-                  [1, -1, math.sqrt(2)],
-                  [1, 1, math.sqrt(2)]]
+        d=1
+        motion = [
+                  [d, 0, d],
+                  [0, d, d],
+                  [-d, 0, d],
+                  [0, -d, d],
+                  [-d, -d, math.sqrt(2*(d**2))],
+                  [-d, d, math.sqrt(2*(d**2))],
+                  [d, -d, math.sqrt(2*(d**2))],
+                  [d, d, math.sqrt(2*(d**2))]]
 
         return motion
 
@@ -322,7 +324,7 @@ def astar_generate(fruit_obs,aruco_obs):
     sy = 0.0  # [m]
     # gx = 50.0  # [m]
     # gy = 50.0  # [m]
-    grid_size = 2.0  # [m]
+    grid_size = 1.0  # [m]
     robot_radius = 1.0  # [m]
 
     # set obstacle positions
@@ -402,8 +404,8 @@ def generate_points(fruit_goals, aruco_true_pos, fruit_true_pos):
         # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
         
         for k in range(len(x_list)):
-            x = round_nearest(fruit_goals[i][0] + x_list[k], 0.2)
-            y = round_nearest(fruit_goals[i][1] + y_list[k], 0.2)
+            x = round_nearest(fruit_goals[i][0] + x_list[k], 0.1)
+            y = round_nearest(fruit_goals[i][1] + y_list[k], 0.1)
 
             if not (np.array([x, y]) == aruco_true_pos).all(1).any():
                 possible_goal.append(np.array([x, y]))
@@ -480,7 +482,7 @@ def main():
         temp = [[x/10.0,y/10.0] for x, y in zip(rx, ry)]
         waypoints_list.append(temp)
 
-    #print(waypoints_list)
+    print(waypoints_list)
 
     if show_animation:
 

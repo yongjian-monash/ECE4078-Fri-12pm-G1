@@ -156,23 +156,23 @@ def merge_estimations(target_map):
 
     for i in range(num_per_target):
         try:
-            target_est['redapple_'+str(i)] = {'x':redapple_est[0], 'y':redapple_est[1]}
+            target_est['redapple_'+str(i)] = {'x':round(redapple_est[0],1), 'y':round(redapple_est[1],1)}
         except:
             pass
         try:
-            target_est['greenapple_'+str(i)] = {'x':greenapple_est[0], 'y':greenapple_est[1]}
+            target_est['greenapple_'+str(i)] = {'x':round(greenapple_est[0],1), 'y':round(greenapple_est[1],1)}
         except:
             pass
         try:
-            target_est['orange_'+str(i)] = {'x':orange_est[0], 'y':orange_est[1]}
+            target_est['orange_'+str(i)] = {'x':round(orange_est[0],1), 'y':round(orange_est[1],1)}
         except:
             pass
         try:
-            target_est['mango_'+str(i)] = {'x':mango_est[0], 'y':mango_est[1]}
+            target_est['mango_'+str(i)] = {'x':round(mango_est[0],1), 'y':round(mango_est[1],1)}
         except:
             pass
         try:
-            target_est['capsicum_'+str(i)] = {'x':capsicum_est[0], 'y':capsicum_est[1]}
+            target_est['capsicum_'+str(i)] = {'x':round(capsicum_est[0],1), 'y':round(capsicum_est[1],1)}
         except:
             pass
     ###########################################

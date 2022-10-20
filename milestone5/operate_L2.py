@@ -355,9 +355,9 @@ class Operate:
                     self.record_data()
 
                     self.count_rot=self.count_rot+1
-                    if self.count_rot==3:
-                        self.rotate_robot(num_turns=12)
-                        self.count_rot=0
+                    # if self.count_rot==3:
+                    #     self.rotate_robot(num_turns=12)
+                    #     self.count_rot=0
             else:
                 print("Waypoints list is empty")
                 self.waypoints_list = []
@@ -602,7 +602,7 @@ if __name__ == "__main__":
             counter += 2
 
     operate = Operate(args)
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
 

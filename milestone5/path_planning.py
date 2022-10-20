@@ -42,6 +42,14 @@ class DStarLite:
     # possible motions
     d = 2
     motions = [
+        Node(1, 0, 1),
+        Node(0, 1, 1),
+        Node(-1, 0, 1),
+        Node(0, -1, 1),
+        Node(1, 1, math.sqrt(2*(1**2))),
+        Node(1, -1, math.sqrt(2*(1**2))),
+        Node(-1, 1, math.sqrt(2*(1**2))),
+        Node(-1, -1, math.sqrt(2*(1**2))),
         Node(d, 0, d),
         Node(0, d, d),
         Node(-d, 0, d),
@@ -401,8 +409,8 @@ def generate_points_L2(fruit_goals, aruco_true_pos):
         # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
         
         for k in range(len(x_list)):
-            x = round_nearest(fruit_goals[i][0] + x_list[k], 0.2)
-            y = round_nearest(fruit_goals[i][1] + y_list[k], 0.2)
+            x = round_nearest(fruit_goals[i][0] + x_list[k], 0.1)
+            y = round_nearest(fruit_goals[i][1] + y_list[k], 0.1)
             
             if not (np.array([x, y]) == aruco_true_pos).all(1).any():
                 possible_goal.append(np.array([x, y]))
@@ -548,7 +556,7 @@ def print_target_fruits_pos(search_list, fruit_list, fruit_true_pos):
     n_fruit = 1
     fruit_goals = []
     for fruit in search_list:
-        for i in range(3):
+        for i in range(5):
             if fruit == fruit_list[i]:
                 x = np.round(fruit_true_pos[i][0], 1)
                 y = np.round(fruit_true_pos[i][1], 1)
@@ -659,8 +667,8 @@ class GenerateCoord:
             # angle_list = [0, 0.50*np.pi, 1.00*np.pi, -0.50*np.pi]
             
             for k in range(len(x_list)):
-                x = self.round_nearest(self.fruit_true_pos[i][0] + x_list[k], 0.2)
-                y = self.round_nearest(self.fruit_true_pos[i][1] + y_list[k], 0.2)
+                x = self.round_nearest(self.fruit_true_pos[i][0] + x_list[k], 0.1)
+                y = self.round_nearest(self.fruit_true_pos[i][1] + y_list[k], 0.1)
                 
                 if not (np.array([x, y]) == self.aruco_true_pos).all(1).any() and (not ((np.array([x, y]) == spoofed_obs).all(1).any()) if len(spoofed_obs) != 0 else True):
                     possible_goal.append(np.array([x, y]))
@@ -673,6 +681,9 @@ class GenerateCoord:
                     min_val = dis
                     new_goal[i] = possible_goal[j]
                     face_angle[i] = possible_angle[j]
+            
+            print(new_goal[i][0])
+            print(new_goal[i][0])
             sx = np.append(sx, new_goal[i][0])
             sy = np.append(sy, new_goal[i][1])
         sx = (sx * 10).astype(int)
@@ -758,7 +769,7 @@ class GenerateCoord:
         return spoofed_ox, spoofed_oy
         
 def animation():
-    gen_cor = GenerateCoord('M4_true_map.txt')
+    gen_cor = GenerateCoord('aruco_fruits_final.txt')
     fruit_list, _, _ = gen_cor.read_true_map()
     obs_fruit_list = []
     spoofed_obs = []
@@ -884,7 +895,7 @@ def ori():
                    spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
                    
 def new_main():
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
     
@@ -937,7 +948,7 @@ def new_main():
     plt.show()
 
 def detect_fruit_path():
-    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+    fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     search_list = read_search_list()
     fruit_goals = print_target_fruits_pos(search_list, fruit_list, fruit_true_pos)
     
@@ -1051,4 +1062,5 @@ if __name__ == "__main__":
     show_animation = True
     pause_time = 0.1
     p_create_random_obstacle = 0
-    detect_fruit_path()
+    # detect_fruit_path()
+    new_main()
