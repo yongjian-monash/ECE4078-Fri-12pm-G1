@@ -50,14 +50,14 @@ class DStarLite:
         Node(1, -1, math.sqrt(2*(1**2))),
         Node(-1, 1, math.sqrt(2*(1**2))),
         Node(-1, -1, math.sqrt(2*(1**2))),
-        Node(d, 0, d),
-        Node(0, d, d),
-        Node(-d, 0, d),
-        Node(0, -d, d),
-        Node(d, d, math.sqrt(2*(d**2))),
-        Node(d, -d, math.sqrt(2*(d**2))),
-        Node(-d, d, math.sqrt(2*(d**2))),
-        Node(-d, -d, math.sqrt(2*(d**2)))
+        # Node(d, 0, d),
+        # Node(0, d, d),
+        # Node(-d, 0, d),
+        # Node(0, -d, d),
+        # Node(d, d, math.sqrt(2*(d**2))),
+        # Node(d, -d, math.sqrt(2*(d**2))),
+        # Node(-d, d, math.sqrt(2*(d**2))),
+        # Node(-d, -d, math.sqrt(2*(d**2)))
     ]
 
     def __init__(self, ox: list, oy: list):
@@ -682,8 +682,6 @@ class GenerateCoord:
                     new_goal[i] = possible_goal[j]
                     face_angle[i] = possible_angle[j]
             
-            print(new_goal[i][0])
-            print(new_goal[i][0])
             sx = np.append(sx, new_goal[i][0])
             sy = np.append(sy, new_goal[i][1])
         sx = (sx * 10).astype(int)

@@ -16,9 +16,9 @@ import shutil # python package for file operations
 
 # import SLAM components you developed in M2
 sys.path.insert(0, "{}/slam".format(os.getcwd()))
-from slam.ekf import EKF
+from slam.ekf_no_update_marker import EKF
 from slam.robot import Robot
-import slam.aruco_detector as aruco
+import slam.aruco_detector_L2 as aruco
 
 # import CV components
 sys.path.insert(0,"{}/network/".format(os.getcwd()))
@@ -351,13 +351,13 @@ class Operate:
                         print("Fruit reached, robot sleeps for 3 seconds")
                         time.sleep(3)
 
-                    self.command['output2'] = True
+                    # self.command['output2'] = True
                     self.record_data()
 
                     self.count_rot=self.count_rot+1
-                    # if self.count_rot==3:
-                    #     self.rotate_robot(num_turns=12)
-                    #     self.count_rot=0
+                    if self.count_rot==7:
+                        self.rotate_robot(num_turns=12)
+                        self.count_rot=0
             else:
                 print("Waypoints list is empty")
                 self.waypoints_list = []
