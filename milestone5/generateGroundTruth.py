@@ -12,7 +12,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("outputfilename", type=str, help='output filename')
+    parser.add_argument("--outputfilename", default='TRUEMAP', type=str, help='output filename')
     args = parser.parse_args()
    
     space = np.array([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])    
