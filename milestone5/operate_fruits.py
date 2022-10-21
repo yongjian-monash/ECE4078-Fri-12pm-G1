@@ -384,12 +384,12 @@ class Operate:
                 lms = []
                 aruco_true_pos=self.read_true_map_aruco('slam_aligned.txt')
                 for i,lm in enumerate(aruco_true_pos):
-                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.00001*np.eye(2)))
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
                     lms.append(measure_lm)
                 self.ekf.add_landmarks_init(lms)
 
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                self.command['evaluate'] = True
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+            #     self.command['evaluate'] = True
 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
                 self.command['save_fruits'] = True
@@ -405,14 +405,6 @@ class Operate:
                 self.quit = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.quit = True
-            # output RMSE during run
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
-                self.command['output2'] = True
-            # reset robot position
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_z:
-                self.ekf.robot.state[0] = 0
-                self.ekf.robot.state[1] = 0
-                self.ekf.robot.state[2] = 0
         if self.quit:
             pygame.quit()
             sys.exit()

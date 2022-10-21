@@ -502,16 +502,16 @@ class Operate:
                         self.ekf_on = True
                     else:
                         self.notification = '> 2 landmarks is required for pausing'
-                elif n_observed_markers < 3:
-                    self.notification = '> 2 landmarks is required for pausing'
-                else:
-                    if not self.ekf_on:
-                        self.request_recover_robot = True
-                    self.ekf_on = not self.ekf_on
-                    if self.ekf_on:
-                        self.notification = 'SLAM is running'
-                    else:
-                        self.notification = 'SLAM is paused'
+                # elif n_observed_markers < 3:
+                #     self.notification = '> 2 landmarks is required for pausing'
+                # else:
+                #     if not self.ekf_on:
+                #         self.request_recover_robot = True
+                #     self.ekf_on = not self.ekf_on
+                #     if self.ekf_on:
+                #         self.notification = 'SLAM is running'
+                #     else:
+                #         self.notification = 'SLAM is paused'
 
                 # read in the true map
                 # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')

@@ -801,7 +801,7 @@ if __name__ == "__main__":
         # update pygame display
         operate.draw(canvas)
         pygame.display.update()
-        
+         
         # perform fruit search
         operate.auto_fruit_search(canvas)
         angle = operate.ekf.robot.state[2][0]

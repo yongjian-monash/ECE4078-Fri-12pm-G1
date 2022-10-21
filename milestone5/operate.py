@@ -225,7 +225,7 @@ class Operate:
                 
         if self.command['offset_plus']: # increase offset
             if self.offset_mode == 1:
-                self.offset_rot += 5*np.pi/180
+                self.offset_rot += 2*np.pi/180
             elif self.offset_mode == 2:
                 self.offset_trans_x += 0.1
             elif self.offset_mode == 3:
@@ -238,7 +238,7 @@ class Operate:
                 
         if self.command['offset_minus']: # decrease offset
             if self.offset_mode == 1:
-                self.offset_rot -= 5*np.pi/180
+                self.offset_rot -= 2*np.pi/180
             elif self.offset_mode == 2:
                 self.offset_trans_x -= 0.1
             elif self.offset_mode == 3:
@@ -403,11 +403,11 @@ class Operate:
                     else:
                         self.notification = 'SLAM is paused'
 
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                self.command['evaluate'] = True
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+            #     self.command['evaluate'] = True
 
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
-                self.command['save_fruits'] = True
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+            #     self.command['save_fruits'] = True
 
             # run object detector
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
