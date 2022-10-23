@@ -136,8 +136,8 @@ def apply_transform_custom(theta, x, points, offset_rot = 0, offset_x = 0, offse
     assert(points.shape[0] == 2)
     
     theta += offset_rot
-    x[0,0] += offset_x
-    x[1,0] += offset_y
+    # x[0,0] += offset_x
+    # x[1,0] += offset_y
     
     c, s = np.cos(theta), np.sin(theta)
     R = np.array(((c, -s), (s, c)))
@@ -146,8 +146,29 @@ def apply_transform_custom(theta, x, points, offset_rot = 0, offset_x = 0, offse
     # print(x)
     # print(R@points)
 
-    points_transformed =  R @ points + x
+    points_transformed =  R @ (points + x)
+    print(f"Points: {points_transformed}")
+    points_transformed[0] += offset_x
+    points_transformed[1] += offset_y
     return points_transformed
+
+# def apply_transform_custom2(theta, x, points, offset_rot = 0, offset_x = 0, offset_y = 0):
+#     # Apply an SE(2) transform to a set of 2D points
+#     assert(points.shape[0] == 2)
+    
+#     theta += offset_rot
+#     x[0,0] += offset_x
+#     x[1,0] += offset_y
+    
+#     c, s = np.cos(theta), np.sin(theta)
+#     R = np.array(((c, -s), (s, c)))
+#     # print(R)
+#     # print(points)
+#     # print(x)
+#     # print(R@points)
+
+#     points_transformed =  R @ points + x
+#     return points_transformed
 
 def compute_rmse(points1, points2):
     # Compute the RMSE between two matched sets of 2D points.
@@ -226,69 +247,70 @@ def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y 
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
     us_aruco = parse_user_map('lab_output/slam.txt')
     
-    taglist, us_vec, _ = match_aruco_points_test(us_aruco, gt_aruco)
+    taglist, us_vec, gt_vec = match_aruco_points_test(us_aruco, gt_aruco)
     idx = np.argsort(taglist)
     taglist = np.array(taglist)[idx]
     us_vec = us_vec[:, idx]
-    # gt_vec = gt_vec[:, idx]
-
-    # theta, x = solve_umeyama2d(us_vec, gt_vec)
-    # us_vec_aligned = apply_transform(theta, x, us_vec)
-    
-    #x = -np.array([[robot_pose[0][0]],[robot_pose[1][0]]])
-    #theta = -robot_pose[2][0]
+    gt_vec = gt_vec[:, idx]
     
     theta, x = solve_trans_rot(robot_cur, robot_ekf)
     us_vec_aligned = apply_transform_custom(-theta, -x, us_vec, offset_rot, offset_x, offset_y) #rmse after aligning using robot pose
     save(us_vec_aligned)
 
-    # diff = gt_vec - us_vec_aligned
-    # rmse = compute_rmse(us_vec, gt_vec) #rmse before any alignment
-    # rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)   #rmse after aligning using ground truth
+    diff = gt_vec - us_vec_aligned
+    rmse = compute_rmse(us_vec, gt_vec) #rmse before any alignment
+    rmse_aligned = compute_rmse(us_vec_aligned, gt_vec)   #rmse after aligning using ground truth
+
+    # # testing transformation bracket
+    # us_vec_aligned2 = apply_transform_custom2(-theta, -x, us_vec, offset_rot, offset_x, offset_y) #rmse after aligning using robot pose
+    # rmse_aligned2 = compute_rmse(us_vec_aligned2, gt_vec)   #rmse after aligning using ground truth
+
+    theta_gt, x_gt = solve_umeyama2d(us_vec, gt_vec)
+    us_vec_gt_align = apply_transform(theta_gt, x_gt, us_vec)
+    diff_ori = gt_vec - us_vec_gt_align
+    rmse_ori = compute_rmse(us_vec_gt_align, gt_vec)
+    rmse_gt_align = compute_rmse(us_vec_gt_align, gt_vec)  
 
 
-    # theta_gt, x_gt = solve_umeyama2d(us_vec, gt_vec)
-    # us_vec_gt_align = apply_transform(theta_gt, x_gt, us_vec)
-    # diff_ori = gt_vec - us_vec_gt_align
-    # rmse_ori = compute_rmse(us_vec_gt_align, gt_vec)
-    # rmse_gt_align = compute_rmse(us_vec_gt_align, gt_vec)  
-
-
-    # print()
-    # print("The following parameters optimally transform the estimated points to the ground truth.")
-    # print("Rotation Angle: {}".format(theta))
-    # print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
+    print()
+    print("The following parameters optimally transform the estimated points to the ground truth.")
+    print("Rotation Angle: {}".format(theta))
+    print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
     
-    # print()
-    # print("Number of found markers: {}".format(len(taglist)))
-    # print("RMSE before alignment: {}".format(rmse))
-    # print("RMSE after alignment using robot pose:  {}".format(rmse_aligned))
-    # print("RMSE after alignment using ground truth:  {}".format(rmse_gt_align))
+    print()
+    print("Number of found markers: {}".format(len(taglist)))
+    print("RMSE before alignment: {}".format(rmse))
+    print("RMSE after alignment using robot pose:  {}".format(rmse_aligned))
+    print("RMSE after alignment using ground truth:  {}".format(rmse_gt_align))
 
-    # print()
-    # print('%s %7s %9s %7s %11s %9s %7s' % ('Marker', 'Real x', 'Pred x', 'Δx', 'Real y', 'Pred y', 'Δy'))
-    # print('-----------------------------------------------------------------')
-    # for i in range(len(taglist)):
-        # print('%3d %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f\n' % (taglist[i], gt_vec[0][i], us_vec_aligned[0][i], diff[0][i], gt_vec[1][i], us_vec_aligned[1][i], diff[1][i]))
+    # print("RMSE after alignment2 using robot pose:  {}".format(rmse_aligned2))
+
+    print()
+    print('%s %7s %9s %7s %11s %9s %7s' % ('Marker', 'Real x', 'Pred x', 'Δx', 'Real y', 'Pred y', 'Δy'))
+    print('-----------------------------------------------------------------')
+    for i in range(len(taglist)):
+        print('%3d %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f\n' % (taglist[i], gt_vec[0][i], us_vec_aligned[0][i], diff[0][i], gt_vec[1][i], us_vec_aligned[1][i], diff[1][i]))
     
     ax = plt.gca()
-    # ax.scatter(gt_vec[0,:], gt_vec[1,:], marker='o', color='C0', s=100)
+    ax.scatter(gt_vec[0,:], gt_vec[1,:], marker='o', color='C0', s=100)
     ax.scatter(us_vec_aligned[0,:], us_vec_aligned[1,:], marker='x', color='C1', s=100)
     ax.scatter(us_vec[0,:], us_vec[1,:], marker='x', color='C3', s=100)
-    # ax.scatter(us_vec_gt_align[0,:], us_vec_gt_align[1,:], marker='x', color='C4', s=100)
+    ax.scatter(us_vec_gt_align[0,:], us_vec_gt_align[1,:], marker='x', color='C4', s=100)
+    # ax.scatter(us_vec_aligned2[0,:], us_vec_aligned2[1,:], marker='x', color='C5', s=100)
 
     for i in range(len(taglist)):
-        # ax.text(gt_vec[0,i]+0.05, gt_vec[1,i]+0.05, taglist[i], color='C0', size=12)
+        ax.text(gt_vec[0,i]+0.05, gt_vec[1,i]+0.05, taglist[i], color='C0', size=12)
         ax.text(us_vec_aligned[0,i]+0.05, us_vec_aligned[1,i]+0.05, taglist[i], color='C1', size=12)
         ax.text(us_vec[0,i]+0.05, us_vec[1,i]+0.05, taglist[i], color='C3', size=12)
-        # ax.text(us_vec_gt_align[0,i]+0.05, us_vec_gt_align[1,i]+0.05, taglist[i], color='C4', size=12)
+        ax.text(us_vec_gt_align[0,i]+0.05, us_vec_gt_align[1,i]+0.05, taglist[i], color='C4', size=12)
+        # ax.text(us_vec_aligned2[0,i]+0.05, us_vec_aligned2[1,i]+0.05, taglist[i], color='C5', size=12)
     plt.title('Arena')
     plt.xlabel('X')
     plt.ylabel('Y')
     ax.set_xticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
     ax.set_yticks([-1.6, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.6])
-    # plt.legend(['Real','after align','before align','gt align'])
-    plt.legend(['after align','before align'])
+    plt.legend(['Real','after align','before align','gt align'])
+    # plt.legend(['after align','before align'])
     plt.grid()
     plt.savefig('pics/test_plot_markers.png')
     plt.close()
@@ -298,7 +320,7 @@ def givecoord_test(robot_ekf, robot_cur, offset_rot = 0, offset_x = 0, offset_y 
 def evaluate_after(): #for testing only, will plot ground truth and aligned aruco markers
     
     gt_aruco = parse_groundtruth('TRUEMAP.txt')
-    us_aruco = parse_generated_gt('slam_aligned.txt')
+    us_aruco = parse_generated_gt('slam.txt')
     
     taglist, us_vec_aligned, gt_vec = match_aruco_points_test(us_aruco, gt_aruco)
     idx = np.argsort(taglist)

@@ -66,11 +66,12 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
     
     # measured parameters
     camera_offset = 0.067 # 6.7cm from robot center
-    redapple_dimensions = [0.074, 0.074, 0.0950]
-    greenapple_dimensions = [0.081, 0.081, 0.0841]
+    redapple_dimensions = [0.074, 0.074, 0.0965]
+    greenapple_dimensions = [0.081, 0.081, 0.0760]
     orange_dimensions = [0.075, 0.075, 0.0797]
-    mango_dimensions = [0.113, 0.067, 0.0599]
-    capsicum_dimensions = [0.073, 0.073, 0.0957]
+    mango_dimensions = [0.113, 0.067, 0.0590]
+    # capsicum_dimensions = [0.073, 0.073, 0.0957]
+    capsicum_dimensions = [0.073, 0.073, 0.0980] #we use 1.2m as benchmark
     
     # redapple_dimensions = [0.074, 0.074, 0.087]
     target_dimensions.append(redapple_dimensions)
@@ -104,7 +105,7 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
         
         # more accurate estimation
         u_0 = camera_matrix[0][2]
-        theta_f = np.arctan((box[0][0] - u_0)/focal_length)
+        theta_f = np.arctan((u_0 - box[0][0])/focal_length)
         target_pose['x'] = robot_pose[0][0] + (d + camera_offset)*np.cos(robot_pose[2][0] + theta_f)
         target_pose['y'] = robot_pose[1][0] + (d + camera_offset)*np.sin(robot_pose[2][0] + theta_f)
         
@@ -156,22 +157,27 @@ def merge_estimations(target_map):
 
     for i in range(num_per_target):
         try:
+            print(f"redapple: x = {redapple_est[0]}, y = {redapple_est[1]}")
             target_est['redapple_'+str(i)] = {'x':round(redapple_est[0],1), 'y':round(redapple_est[1],1)}
         except:
             pass
         try:
+            print(f"greenapple: x = {greenapple_est[0]}, y = {greenapple_est[1]}")
             target_est['greenapple_'+str(i)] = {'x':round(greenapple_est[0],1), 'y':round(greenapple_est[1],1)}
         except:
             pass
         try:
+            print(f"orange: x = {orange_est[0]}, y = {orange_est[1]}")
             target_est['orange_'+str(i)] = {'x':round(orange_est[0],1), 'y':round(orange_est[1],1)}
         except:
             pass
         try:
+            print(f"mango: x = {mango_est[0]}, y = {mango_est[1]}")
             target_est['mango_'+str(i)] = {'x':round(mango_est[0],1), 'y':round(mango_est[1],1)}
         except:
             pass
         try:
+            print(f"capsicum: x = {capsicum_est[0]}, y = {capsicum_est[1]}")
             target_est['capsicum_'+str(i)] = {'x':round(capsicum_est[0],1), 'y':round(capsicum_est[1],1)}
         except:
             pass

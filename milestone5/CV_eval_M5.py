@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser("Matching the estimated map and the true map")
     parser.add_argument("--truth", type=str, help="The ground truth file name.", default='TRUEMAP.txt')
-    parser.add_argument("--est", type=str, help="The estimate file name.", default='aruco_fruit_final.txt')
+    parser.add_argument("--est", type=str, help="The estimate file name.", default='targets.txt')
     args, _ = parser.parse_known_args()
 
     # read in ground truth and estimations

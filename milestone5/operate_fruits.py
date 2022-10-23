@@ -354,14 +354,29 @@ class Operate:
             # elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
             #     self.command['output'] = True
             # reset SLAM map
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+            #     if self.double_reset_comfirm == 0:
+            #         self.notification = 'Press again to confirm CLEAR MAP'
+            #         self.double_reset_comfirm +=1
+            #     elif self.double_reset_comfirm == 1:
+            #         self.notification = 'SLAM Map is cleared'
+            #         self.double_reset_comfirm = 0
+            #         self.ekf.reset()
+
+            # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                if self.double_reset_comfirm == 0:
-                    self.notification = 'Press again to confirm CLEAR MAP'
-                    self.double_reset_comfirm +=1
-                elif self.double_reset_comfirm == 1:
-                    self.notification = 'SLAM Map is cleared'
-                    self.double_reset_comfirm = 0
-                    self.ekf.reset()
+                self.waypoints_list = []
+                self.ekf.reset()
+                
+                # read in the true map
+                # fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('M4_true_map.txt')
+                lms = []
+                aruco_true_pos=self.read_true_map_aruco('slam_aligned.txt')
+                for i,lm in enumerate(aruco_true_pos):
+                    measure_lm = measure.Marker(np.array([[lm[0]],[lm[1]]]),i+1, covariance=(0.0001*np.eye(2)))
+                    lms.append(measure_lm)
+                self.ekf.add_landmarks_init(lms)  
+
             # run SLAM
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 n_observed_markers = len(self.ekf.taglist)
@@ -470,7 +485,7 @@ if __name__ == "__main__":
         angle = angle*180/np.pi
         angle = angle % 360
         #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
-        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
+        # print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 
 
 

@@ -225,11 +225,11 @@ class Operate:
                 
         if self.command['offset_plus']: # increase offset
             if self.offset_mode == 1:
-                self.offset_rot += 2*np.pi/180
+                self.offset_rot += 1*np.pi/180
             elif self.offset_mode == 2:
-                self.offset_trans_x += 0.1
+                self.offset_trans_x += 0.05
             elif self.offset_mode == 3:
-                self.offset_trans_y += 0.1
+                self.offset_trans_y += 0.05
                 
             SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
             self.update_plot(canvas,'pics/test_plot_markers.png')
@@ -238,11 +238,11 @@ class Operate:
                 
         if self.command['offset_minus']: # decrease offset
             if self.offset_mode == 1:
-                self.offset_rot -= 2*np.pi/180
+                self.offset_rot -= 1*np.pi/180
             elif self.offset_mode == 2:
-                self.offset_trans_x -= 0.1
+                self.offset_trans_x -= 0.05
             elif self.offset_mode == 3:
-                self.offset_trans_y -= 0.1
+                self.offset_trans_y -= 0.05
                 
             SLAM_eval_M5.givecoord_test(self.current_slam_pose, self.current_robot_pose, offset_rot = self.offset_rot, offset_x = self.offset_trans_x, offset_y = self.offset_trans_y)
             self.update_plot(canvas,'pics/test_plot_markers.png')
@@ -494,7 +494,7 @@ if __name__ == "__main__":
         angle = angle*180/np.pi
         angle = angle % 360
         #print(f"Position_rad: {operate.ekf.robot.state.squeeze().tolist()}")
-        print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
+        # print(f"Position: {operate.ekf.robot.state[0][0]},{operate.ekf.robot.state[1][0]},{angle}")
 
 
 
