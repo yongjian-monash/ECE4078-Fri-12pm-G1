@@ -68,7 +68,7 @@ def estimate_pose(base_dir, camera_matrix, completed_img_dict):
     camera_offset = 0.067 # 6.7cm from robot center
     redapple_dimensions = [0.074, 0.074, 0.0965]
     greenapple_dimensions = [0.081, 0.081, 0.0760]
-    orange_dimensions = [0.075, 0.075, 0.0797]
+    orange_dimensions = [0.075, 0.075, 0.0760]
     mango_dimensions = [0.113, 0.067, 0.0590]
     # capsicum_dimensions = [0.073, 0.073, 0.0957]
     capsicum_dimensions = [0.073, 0.073, 0.0980] #we use 1.2m as benchmark

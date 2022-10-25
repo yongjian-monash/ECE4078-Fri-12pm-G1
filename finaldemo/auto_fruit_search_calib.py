@@ -107,7 +107,7 @@ def rotate_robot_angle(ppi, turn_angle=0):
     turn_angle = turn_angle*np.pi/180
 
     
-    turn_time = (abs(turn_angle)*baseline*1.12)/(2.0*scale*wheel_vel) + turn_offset
+    turn_time = (abs(turn_angle)*baseline*1.11)/(2.0*scale*wheel_vel) + turn_offset
     print(turn_time)
     
     for _ in range(turn_steps):
