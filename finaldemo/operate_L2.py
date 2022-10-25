@@ -562,6 +562,7 @@ class Operate:
             # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 self.waypoints_list = []
+                self.count_rot=0
                 self.ekf.reset()
                 
                 # read in the true map
