@@ -150,6 +150,9 @@ def apply_transform_custom(theta, x, points, offset_rot = 0, offset_x = 0, offse
     print(f"Points: {points_transformed}")
     points_transformed[0] += offset_x
     points_transformed[1] += offset_y
+    print(f"Rot_offset = {offset_rot}")
+    print(f"Rot_trans_x = {offset_x}")
+    print(f"Rot_trans_y = {offset_y}")
     return points_transformed
 
 # def apply_transform_custom2(theta, x, points, offset_rot = 0, offset_x = 0, offset_y = 0):
