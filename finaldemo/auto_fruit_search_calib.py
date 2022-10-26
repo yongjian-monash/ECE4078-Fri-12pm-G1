@@ -128,25 +128,25 @@ if __name__ == "__main__":
 
     ppi = Alphabot(args.ip,args.port)
 
-    while True:
-        angle = input("Rotate angle: ")
-        try:
-            angle = int(angle)
-        except ValueError:
-            print("Please enter an integer.")
-            continue
-
-        rotate_robot_angle(ppi, angle)
-
     # while True:
-    #     steps = input("Step number: ")
+    #     angle = input("Rotate angle: ")
     #     try:
-    #         steps = int(steps)
+    #         angle = int(angle)
     #     except ValueError:
     #         print("Please enter an integer.")
     #         continue
 
-    #     rotate_robot(ppi, steps)
+    #     rotate_robot_angle(ppi, angle)
+
+    while True:
+        steps = input("Step number: ")
+        try:
+            steps = int(steps)
+        except ValueError:
+            print("Please enter an integer.")
+            continue
+
+        rotate_robot(ppi, steps)
 
     # while True:
     #     turn_diff,pos_diff = 0.0,0.0

@@ -495,7 +495,7 @@ class Operate:
         if(num_turns==8):
             turn_offset=0.024
         elif num_turns==12:
-            turn_offset=0.035
+            turn_offset=0.040
 
         turn_time = (abs(turn_resolution)*baseline)/(2.0*scale*wheel_vel)
         
