@@ -285,6 +285,9 @@ def live_fruit_pose_M5():
     with open('aruco_fruit_final.txt', 'w') as f: #append to exisiting txt file
         print(d, file=f)
 
+    with open(base_dir/'lab_output/targets.txt', 'w') as fo:
+        json.dump(target_est, fo)
+
 
     fruit_list, fruit_true_pos, aruco_true_pos = read_true_map('aruco_fruit_final.txt')
     taglist=[1,2,3,4,5,6,7,8,9,10]

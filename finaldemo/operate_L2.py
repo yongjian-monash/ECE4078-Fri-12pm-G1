@@ -92,6 +92,7 @@ class Operate:
         
         self.path_planning = None
         self.waypoints_list = []
+        self.waypoints_list_mem = []
         self.count_rot=0
 
     # wheel control
@@ -280,7 +281,7 @@ class Operate:
             
             # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                self.waypoints_list = []
+                
                 self.ekf.reset()
                 
                 # read in the true map
@@ -343,6 +344,9 @@ class Operate:
             pathy.pop(0)
             temp = [[x/10.0,y/10.0] for x, y in zip(pathx, pathy)]
             self.waypoints_list.append(temp)
+            #self.waypoints_list_mem.append([[x/10.0,y/10.0] for x, y in zip(pathx, pathy)])
+
+        print(f"Mem: {self.waypoints_list_mem}")
             
         # Feedback
         print(f"Path generated: {self.waypoints_list}")
@@ -470,7 +474,7 @@ class Operate:
 
         print("Arrived at [{}, {}]".format(waypoint[0], waypoint[1]))
         
-    def waypoint_update(self, steps=3):
+    def waypoint_update(self, steps=4):
         for _ in range(steps):
             self.take_pic()
             lv, rv = self.pibot.set_velocity([0, 0], tick=0.0, time=0.0)
@@ -503,7 +507,7 @@ class Operate:
             lv, rv = self.pibot.set_velocity([0, 1], turning_tick=wheel_vel, time=turn_time+turn_offset)
             turn_drive_meas = measure.Drive(lv, rv, turn_time)
             
-            time.sleep(0.5)
+            time.sleep(0.35)
             self.take_pic()
             self.update_slam(turn_drive_meas)
 
@@ -561,6 +565,9 @@ class Operate:
                     
             # reset path planning algorithm
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                if not self.ekf_on:
+                    self.notification = 'SLAM is running'
+                    self.ekf_on = True
                 self.waypoints_list = []
                 self.count_rot=0
                 self.ekf.reset()
@@ -575,6 +582,16 @@ class Operate:
                 
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                 self.command['inference'] = True
+
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            #     self.waypoints_list = self.waypoints_list_mem
+            #     print()
+            #     print(f"Mem: {self.waypoints_list_mem}")
+            #     print(f"Waypoints: {self.waypoints_list}")
+
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+            #     self.waypoints_list = []
+
                 
             # quit
             elif event.type == pygame.QUIT:
